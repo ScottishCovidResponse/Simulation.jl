@@ -20,3 +20,8 @@ for t in testbase
     include(fn)
     println()
 end
+
+@info "Running canonical test"
+println("    * Testing Canonical.jl ...")
+include("test_Canonical.jl")
+println()
