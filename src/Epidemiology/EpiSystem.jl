@@ -65,6 +65,9 @@ function EpiSystem(epilist::EpiList, epienv::GridEpiEnv,
    return EpiSystem(populate!, epilist, epienv, rel)
 end
 
+function Base.isapprox(epi_1::AbstractEpiSystem, epi_2::AbstractEpiSystem; kwargs...)
+    return isapprox(epi_1.abundances, epi_2.abundances; kwargs...)
+end
 
 """
     genlookups(hab::AbstractHabitat, mov::GaussianMovement)
