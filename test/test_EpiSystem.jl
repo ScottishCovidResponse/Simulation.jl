@@ -24,21 +24,13 @@ epi = TestEpiSystem()
 @test_nowarn getdispersalvar(epi, 1)
 @test_nowarn getdispersalvar(epi, "Virus")
 
-@testset "Comparison" begin
-    @testset "Equality" begin
-        epi_2 = deepcopy(epi)
-        @test epi_2 == epi
-    end
-    @testset "Approximate equality" begin
-        epi_2 = deepcopy(epi)
-        @test isapprox(epi_2, epi)
-        # Make some small change within the approximate equality range
-        epi_2.abundances.matrix[2, 1] += 1
-        @test epi_2 != epi
-        @test isapprox(epi_2, epi)
-        # Make some larger change outside the approximate equality range
-        epi_2.abundances.matrix[2, 1] += 1000
-        @test epi_2 != epi
-        @test !isapprox(epi_2, epi)
-    end
+@testset "Approximate equality" begin
+    epi_2 = deepcopy(epi)
+    @test isapprox(epi_2, epi)
+    # Make some small change within the approximate equality range
+    epi_2.abundances.matrix[2, 1] += 1
+    @test isapprox(epi_2, epi)
+    # Make some larger change outside the approximate equality range
+    epi_2.abundances.matrix[2, 1] += 1000
+    @test !isapprox(epi_2, epi)
 end
