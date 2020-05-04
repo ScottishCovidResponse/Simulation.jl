@@ -16,8 +16,8 @@ const PATH_TO_REPO = "../"
 const PATH_TO_EXAMPLES = "examples/Epidemiology/" # from repo
 
 function run_example(file)
-    # need to change the dir to repo as assumed by files in `examples/Epidemiology`,
-    #   as `@benchmarkable` will automatically change the working dir to `repo/benchmark`
+    # need to change the dir to repo as assumed by files in `/examples/Epidemiology/`,
+    #   as `@benchmarkable` will automatically change the working dir to `repo/benchmark/`
     cd(joinpath(@__DIR__, PATH_TO_REPO))
     include(file)
 end
