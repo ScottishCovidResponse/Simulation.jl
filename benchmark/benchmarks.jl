@@ -23,10 +23,10 @@ cd(joinpath(@__DIR__, PATH_TO_REPO))
 for file in readdir(joinpath(@__DIR__, PATH_TO_REPO, PATH_TO_EXAMPLES))
     # temporarily restrict to a few files only as a prototype
     if file in [
-        # "Benchmarking.jl",
-        # "Small_SIR.jl",
-        # "SEI2HRD_example.jl",
-        "UK_SIR.jl"
+        "Benchmarking.jl",
+        "Small_SIR.jl",
+        "SEI2HRD_example.jl",
+        # "UK_SIR.jl"
         ]
         SUITE[file[1:end - length(".jl")]] =
             @benchmarkable $(run_example)(joinpath(@__DIR__, PATH_TO_REPO, PATH_TO_EXAMPLES, $(file)))
