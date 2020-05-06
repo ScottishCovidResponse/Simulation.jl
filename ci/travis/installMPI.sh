@@ -6,11 +6,11 @@ if [ "$TRAVIS_OS_NAME" == "osx" ]; then
 	if [ -f "/opt/local/bin/mpirun-openmpi-gcc9" ]; then
 		echo "Using cached OpenMPI on " $TRAVIS_OS_NAME
     else
-		echo "Installing OpenMPI with homebrew on " $TRAVIS_OS_NAME
+		echo "Installing OpenMPI with macports on " $TRAVIS_OS_NAME
 		brew install swig
 		curl -LO https://raw.githubusercontent.com/GiovanniBussi/macports-ci/master/macports-ci
 		source ./macports-ci install
-		sudo port install openmpi-gcc9
+		sudo port install -y openmpi-gcc9
 	fi
 else
 	mkdir -p ~/openmpi
