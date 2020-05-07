@@ -21,13 +21,17 @@ julia --project=benchmark -e '
 ### To get the benchmark results after running it locally:
 
 #### Sequential
+```
 julia --project=benchmark -e '
     using Pkg; Pkg.instantiate();
     include("benchmark/display_results.jl");
     get_result("result.json")'
+```
 
 #### Multi-thread
+```
 julia --project=benchmark -e '
     using Pkg; Pkg.instantiate();
     include("benchmark/display_results.jl");
     get_result("result_multithread.json)'
+```
