@@ -6,6 +6,10 @@ using Simulation.ClimatePref
 using StatsBase
 using Test
 
+# sort out settings to potentially save inputs/outputs of `simulate`
+do_save = (@isdefined do_save) ? do_save : false
+save_path = (@isdefined save_path) ? save_path : pwd()
+
 ## High transmission & 100% case fatality
 ##
 # Set simulation parameters
@@ -77,7 +81,7 @@ epi.abundances.matrix[4:5, 1] .= new_symptomatic
 # Run simulation
 abuns = zeros(Int64, size(epi.abundances.matrix, 1), size(epi.abundances.matrix, 2), 366)
 times = 1year; interval = 1day; timestep = 1day
-@time simulate_record!(abuns, epi, times, interval, timestep)
+@time simulate_record!(abuns, epi, times, interval, timestep; save=do_save, save_path=joinpath(save_path, "high_trans"))
 
 
 # Test everyone becomes infected and dies
@@ -155,7 +159,7 @@ epi.abundances.matrix[4:5, 1] .= new_symptomatic
 # Run simulation
 abuns = zeros(Int64, size(epi.abundances.matrix, 1), size(epi.abundances.matrix, 2), 366)
 times = 1year; interval = 1day; timestep = 1day
-@time simulate_record!(abuns, epi, times, interval, timestep)
+@time simulate_record!(abuns, epi, times, interval, timestep; save=do_save, save_path=joinpath(save_path, "low_trans"))
 
 
 # Test no one becomes infected & dies
