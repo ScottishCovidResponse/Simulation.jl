@@ -1,6 +1,6 @@
 ## Benchmark simulate in Canonical tests
 
-The benchmark is done on the simulate call (`simulate!` or `simulate_record!`) in [canonical test files](../test/canonical/). If the precomputed EpiSystem and other inputs already exist, they will be loaded to run benchmark on. If not or `gen_epi` in `benchmark.jl` is set to `true`, the EpiSystem will be regenerated and saved for benchmarking.
+The benchmark is done on the simulate call (`simulate!` or `simulate_record!`) in [canonical test files](../test/canonical/). If the precomputed EpiSystem and other inputs already exist, they will be loaded to run benchmark on. If not or `gen_epi` in [benchmark.jl](benchmark.jl]) is set to `true`, the EpiSystem will be regenerated and saved for benchmarking.
 
 ### To benchmark example scripts locally:
 
