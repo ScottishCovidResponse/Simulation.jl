@@ -4,6 +4,10 @@ using Unitful.DefaultSymbols
 using Simulation.Units
 using Test
 
+# sort out settings to potentially save inputs/outputs of `simulate`
+do_save = (@isdefined do_save) ? do_save : false
+save_path = (@isdefined save_path) ? save_path : pwd()
+
 grid_sizes = [1, 2, 4]
 numclasses = 4
 abuns = zeros(Int64, 3, numclasses, 16, 731)
@@ -47,7 +51,7 @@ for i in eachindex(grid_sizes)
     # Run simulation
     times = 2years; interval = 1day; timestep = 1day
     thisabun = @view abuns[i, :, 1:grid_sizes[i]^2, :]
-    @time simulate_record!(thisabun, epi, times, interval, timestep)
+    @time simulate_record!(thisabun, epi, times, interval, timestep; save=do_save, save_path=joinpath(save_path, "grid_size_$(grid_sizes[i])"))
 
     # Test no-one dies (death rate = 0)
     @test sum(thisabun[end, :, :]) == 0

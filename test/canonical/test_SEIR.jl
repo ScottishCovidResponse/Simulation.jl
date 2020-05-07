@@ -4,6 +4,10 @@ using Unitful.DefaultSymbols
 using Simulation.Units
 using Test
 
+# sort out settings to potentially save inputs/outputs of `simulate`
+do_save = (@isdefined do_save) ? do_save : false
+save_path = (@isdefined save_path) ? save_path : pwd()
+
 numclasses = 6
 # Set simulation parameters
 birth = fill(0.0/day, numclasses)
@@ -47,7 +51,7 @@ epi = EpiSystem(epilist, epienv, rel)
 # Run simulation
 abuns = zeros(Int64, numclasses, 16, 731)
 times = 2years; interval = 1day; timestep = 1day
-@time simulate_record!(abuns, epi, times, interval, timestep)
+@time simulate_record!(abuns, epi, times, interval, timestep; save=do_save, save_path=save_path)
 
 # Test no-one dies (death rate = 0)
 @test sum(abuns[end, :, :]) == 0

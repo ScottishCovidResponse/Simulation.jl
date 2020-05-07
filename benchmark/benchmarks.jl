@@ -1,5 +1,4 @@
 # benchmark on files in "../test/canonical/"
-
 using Pkg
 tempdir = mktempdir()
 Pkg.activate(tempdir)
@@ -13,7 +12,7 @@ using JLSO
 using Simulation
 
 # whether or not to regenerate simulate inputs
-gen_epi = true
+gen_epi = false
 
 const SUITE = BenchmarkGroup()
 # - absolute path to various folders
@@ -30,7 +29,7 @@ const PATH_TO_EPI = joinpath(@__DIR__, "episystem/")
 Save the EpiSystem and other inputs needed for simulate as JLSO files
 """
 function save_epi(file, case_name)
-    prinln("save episystem for case: ", case_name)
+    println("save episystem for case: ", case_name)
     # prepare saving arguments that will be used in canonical tests through `simulate!`
     #   or `simulate_record!`. These variables are passed into files being included later
     # NOTE: declare `global` variables as `include` will always evaluate files in the global
@@ -78,29 +77,16 @@ function bench_example(case_name)
                 )
             end
         end
-
     end
 end
+##### END of functions #####
 
-
-
-# set to repo path as some examples use the relative path from repo to load the data
 for file in readdir(PATH_TO_EXAMPLES)
-    if file in [
-        "test_SEI2HRD.jl",
-        # "test_SEIR.jl",
-        # "test_SEIRS.jl",
-        # "test_SIR.jl",
-        # "test_SIS.jl"
-    ]
-        case_name = file[length("test_")+1 : end-length(".jl")]
-        # generate episystem and other simulate inputs if necessary
-        if gen_epi || !isdir(PATH_TO_EPI, case)
-            save_epi(file, case_name)
-        end
-        # run benchmark
-        bench_example(case_name)
+    case_name = file[length("test_")+1 : end-length(".jl")]
+    # generate episystem and other simulate inputs if necessary
+    if gen_epi || !isdir(PATH_TO_EPI, case_name)
+        save_epi(file, case_name)
     end
+    # run benchmark
+    bench_example(case_name)
 end
-
-println(SUITE)
