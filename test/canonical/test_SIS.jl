@@ -66,6 +66,6 @@ end
 # For each disease category, check trajectory is the same when we change grid size
 for j in 2:length(sumabuns)
     for i in 2:numclasses
-        @test isapprox(sumabuns[j-1][i, :], sumabuns[j][i, :], rtol = 1e-2)
+        @test isapprox(sumabuns[j-1][i, :], sumabuns[j][i, :], rtol = 5e-2)
     end
 end
