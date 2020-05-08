@@ -19,7 +19,7 @@ const SUITE = BenchmarkGroup()
 const PATH_TO_REPO = joinpath(@__DIR__, "../")
 const PATH_TO_EXAMPLES = joinpath(@__DIR__, "../test/canonical/")
 # folder that stores precomputed inputs to simulate
-const PATH_TO_EPI = joinpath(@__DIR__, "episystem/")
+const PATH_TO_EPI = joinpath(@__DIR__, "episystem", "numthread_$(Threads.nthreads())/")
 
 
 ##### functions #####

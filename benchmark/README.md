@@ -33,5 +33,5 @@ julia --project=benchmark -e '
 julia --project=benchmark -e '
     using Pkg; Pkg.instantiate();
     include("benchmark/display_results.jl");
-    get_result("result_multithread.json)'
+    get_result("result_multithread.json")'
 ```
