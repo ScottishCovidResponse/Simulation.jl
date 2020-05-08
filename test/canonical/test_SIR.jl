@@ -16,11 +16,12 @@ for i in eachindex(grid_sizes)
     # Set simulation parameters
     birth = fill(0.0/day, numclasses)
     death = fill(0.0/day, numclasses)
-    beta = 1e-4/day
+    beta_force = 1.0/day
+    beta_env = 1.0/day
     sigma = 0.02/day
     virus_growth = 1e-3/day
-    virus_decay = 1.0/day
-    param = SIRGrowth{typeof(unit(beta))}(birth, death, virus_growth, virus_decay, beta, sigma)
+    virus_decay = 1e-3/day
+    param = SIRGrowth{typeof(unit(beta_force))}(birth, death, virus_growth, virus_decay, beta_force, beta_env, sigma)
     param = transition(param)
 
     # Set up simple gridded environment
@@ -38,7 +39,7 @@ for i in eachindex(grid_sizes)
 
     # Dispersal kernels for virus and disease classes
     dispersal_dists = fill(100.0km, numclasses)
-    dispersal_dists[3] = 700.0km
+    dispersal_dists[3] = 1_000.0km
     kernel = GaussianKernel.(dispersal_dists, 1e-10)
     movement = AlwaysMovement(kernel)
 
