@@ -122,13 +122,13 @@ p_s, p_h, cfr_home, cfr_hosp, T_lat, T_asym, T_sym, T_hosp, T_rec)
 param = transition(param)
 
 # Set up simple gridded environment
-grid = (4, 4)
+grid = (8, 8)
 area = 525_000.0km^2
 epienv = simplehabitatAE(298.0K, grid, area, NoControl())
 
 # Set population to initially have no individuals
 virus = 0
-susceptible = 5_000_000
+susceptible = 500_000 * prod(grid)
 exposed = 0
 asymptomatic = 0
 symptomatic = 0
@@ -157,8 +157,9 @@ epi.abundances.matrix[1, 1] = new_virus
 epi.abundances.matrix[4:5, 1] .= new_symptomatic
 
 # Run simulation
-abuns = zeros(Int64, size(epi.abundances.matrix, 1), size(epi.abundances.matrix, 2), 366)
 times = 1year; interval = 1day; timestep = 1day
+abuns = zeros(Int64, size(epi.abundances.matrix, 1), size(epi.abundances.matrix, 2),
+              convert(Int64, floor(times / interval)) + 1)
 @time simulate_record!(abuns, epi, times, interval, timestep; save=do_save, save_path=joinpath(save_path, "low_trans"))
 
 

@@ -22,15 +22,15 @@ param = SEIRSGrowth{typeof(unit(beta))}(birth, death, virus_growth, virus_decay,
 param = transition(param)
 
 # Set up simple gridded environment
-grid = (4, 4)
+grid = (8, 8)
 area = 525_000.0km^2
 epienv = simplehabitatAE(298.0K, grid, area, NoControl())
 
 # Set initial population sizes for all categories: Virus, Susceptible, Infected, Recovered
-virus = 10_000
-susceptible = 5_000_000
+virus = 0
+susceptible = 500_000 * prod(grid)
 exposed = 0
-infected = 1_000
+infected = 100 * prod(grid)
 recovered = 0
 dead = 0
 abun = [virus, susceptible, exposed, infected, recovered, dead]
@@ -50,8 +50,8 @@ rel = Gauss{eltype(epienv.habitat)}()
 epi = EpiSystem(epilist, epienv, rel)
 
 # Run simulation
-abuns = zeros(Int64, numclasses, 16, 731)
 times = 2years; interval = 1day; timestep = 1day
+abuns = zeros(Int64, numclasses, grid[1]*grid[2], convert(Int64, floor(times / interval)) + 1)
 @time simulate_record!(abuns, epi, times, interval, timestep; save=do_save, save_path=save_path)
 
 # Test no-one dies (death rate = 0)
