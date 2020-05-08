@@ -94,7 +94,6 @@ function simulate_record!(
       counting = counting + 1
       storage[:, :, counting] = epi.abundances.matrix
     end
-    print(".")
   end
 
   # save simulation results
