@@ -13,6 +13,7 @@ makedocs(
         "Home" => "index.md",
         "Design" => "Design.md",
         "Structure" => "Structure.md",
+        "API" => "api.md",
     ],
     strict=true,
     checkdocs=:none,
