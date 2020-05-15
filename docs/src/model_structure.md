@@ -1,4 +1,4 @@
-# Model development
+# Model structure
 
 *Description of the model as it currently stands.*
 
