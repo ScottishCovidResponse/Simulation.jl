@@ -13,7 +13,6 @@ makedocs(
         "Home" => "index.md",
         "Design" => "Design.md",
         "Structure" => "Structure.md",
-        "Structure_gh" => "Structure_gh.md",
     ],
     strict=true,
     checkdocs=:none,
