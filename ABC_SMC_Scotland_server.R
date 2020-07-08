@@ -12,7 +12,7 @@ set.seed(12345)
 parallel <- TRUE # Should be run in parallel? 
 julia <- julia_setup()
 
-setwd(dirname(sys.frame(1)$ofile)) #Set directory to be script directory
+setwd('/home/bswallow/Simulation.jl') #Set directory to be script directory
 
 # Origianl parameter set for data simulation
 parorig <- c(10.0, 10.0, 20, 100, 0.1, 1.0)
