@@ -30,9 +30,9 @@ Dorig <- apply(Dorig,c(1,3),sum)
 rm(simdata)
 #### ABC set up ####
 
-G <- 10 # Number of particle generations
-N <- 100 # Number of accepted particles
-K <- 1000
+G <- as.numeric(args[2]) # Number of particle generations
+N <- as.numeric(args[3]) # Number of accepted particles
+K <- as.numeric(args[4])
 nreps <- 50
 ntimes <- dim(Dorig)[2]
 nsum <- 2 # Number of individual summary statistics
@@ -55,7 +55,7 @@ Ascaled <- sapply(1:n_par,function(i)A[,i]*(parrange[2,i]-parrange[1,i])+parrang
 n <- 1
 
 if(parallel){
-  ncores <- args[1]#detectCores()-1
+  ncores <- as.numeric(args[1])#detectCores()-1
   myCluster <- makeCluster(ncores)
   clusterEvalQ(myCluster, {
     library(JuliaCall)
