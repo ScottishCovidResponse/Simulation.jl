@@ -62,7 +62,7 @@ if(parallel){
     
     julia <- julia_setup()
     
-    setwd(dirname(sys.frame(1)$ofile))
+    setwd("/home/bswallow/Simulation.jl")
     JuliaCall:::.julia$cmd("using RCall")
     
     
