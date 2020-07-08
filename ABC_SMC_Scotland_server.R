@@ -1,7 +1,7 @@
 
 
 cdargs <- commandArgs(trailingOnly = TRUE)
-print(cdargs)
+
 if(!require(tmvtnorm)){install.packages("tmvtnorms",dependencies=TRUE,lib = Sys.getenv("R_LIBS_USER"), repos='http://cran.rstudio.com/');library(tmvtnorm)}
 if(!require(lhs)){install.packages("lhs",dependencies=TRUE,lib = Sys.getenv("R_LIBS_USER"), repos='http://cran.rstudio.com/');library(lhs)}
 if(!require(JuliaCall)){install.packages("JuliaCall",dependencies=TRUE,lib = Sys.getenv("R_LIBS_USER"), repos='http://cran.rstudio.com/');library(JuliaCall)}
