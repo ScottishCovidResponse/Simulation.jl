@@ -9,7 +9,7 @@ if(!require(parallel)){install.packages("parallel",dependencies=TRUE,lib = Sys.g
 
 
 set.seed(12345)
-parallel <- TRUE # Should be run in parallel? 
+parallel <- ifelse(args[2]>1,TRUE,FALSE) # Should be run in parallel? 
 julia <- julia_setup()
 
 setwd(args[1]) #Set directory to be script directory
