@@ -1,7 +1,7 @@
 
 
-args <- commandArgs(trailingOnly = TRUE)
-print(args)
+cdargs <- commandArgs(trailingOnly = TRUE)
+print(cdargs)
 if(!require(tmvtnorm)){install.packages("tmvtnorms",dependencies=TRUE,lib = Sys.getenv("R_LIBS_USER"), repos='http://cran.rstudio.com/');library(tmvtnorm)}
 if(!require(lhs)){install.packages("lhs",dependencies=TRUE,lib = Sys.getenv("R_LIBS_USER"), repos='http://cran.rstudio.com/');library(lhs)}
 if(!require(JuliaCall)){install.packages("JuliaCall",dependencies=TRUE,lib = Sys.getenv("R_LIBS_USER"), repos='http://cran.rstudio.com/');library(JuliaCall)}
@@ -9,10 +9,10 @@ if(!require(parallel)){install.packages("parallel",dependencies=TRUE,lib = Sys.g
 
 
 set.seed(12345)
-parallel <- ifelse(args[2]>1,TRUE,FALSE) # Should be run in parallel? 
+parallel <- ifelse(as.integer(cdargs[2])>1,TRUE,FALSE) # Should be run in parallel? 
 julia <- julia_setup()
 
-setwd(args[1]) #Set directory to be script directory
+setwd(cdargs[1]) #Set directory to be script directory
 
 # Origianl parameter set for data simulation
 parorig <- c(10.0, 10.0, 20, 100, 0.1, 1.0)
@@ -26,13 +26,13 @@ simdata <- julia_eval("abuns")
 # Load in model functions
 source("ABC_SMC_Scotland_preamble_server.R")
 Dorig <- simdata[41:48,,]
-Dorig <- apply(Dorig,c(1,3),sum) 
+Dorig <- apply(Dorig,c(1,3),sum)
 rm(simdata)
 #### ABC set up ####
 
-G <- as.numeric(args[3]) # Number of particle generations
-N <- as.numeric(args[3]) # Number of accepted particles
-K <- as.numeric(args[4])
+G <- as.integer(cdargs[3]) # Number of particle generations
+N <- as.integer(cdargs[3]) # Number of accepted particles
+K <- as.integer(cdargs[4])
 nreps <- 50
 ntimes <- dim(Dorig)[2]
 nsum <- 2 # Number of individual summary statistics
@@ -55,17 +55,16 @@ Ascaled <- sapply(1:n_par,function(i)A[,i]*(parrange[2,i]-parrange[1,i])+parrang
 n <- 1
 
 if(parallel){
-  ncores <- as.numeric(args[2])#detectCores()-1
+  ncores <- as.integer(cdargs[2])#detectCores()-1
   myCluster <- makeCluster(ncores)
+  clusterExport(myCluster, c("cdargs"))
   clusterEvalQ(myCluster, {
     library(JuliaCall)
     set.seed(12345)
     
     julia <- julia_setup()
-    
-    setwd(file.path(args[1]))
+    setwd(as.character(cdargs[1]))
     JuliaCall:::.julia$cmd("using RCall")
-    
     
   })
   clusterExport(myCluster, c("n","ntimes","nsum","nsumt","Dorig","epsilon","run_model","runmodpar","calc_distance"))
