@@ -54,7 +54,7 @@ Ascaled <- sapply(1:n_par,function(i)A[,i]*(parrange[2,i]-parrange[1,i])+parrang
 n <- 1
 
 if(parallel){
-  ncores <- 2#detectCores()-1
+  ncores <- 10#detectCores()-1
   myCluster <- makeCluster(ncores)
   clusterEvalQ(myCluster, {
     library(JuliaCall)
