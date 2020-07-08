@@ -63,7 +63,7 @@ if(parallel){
     
     julia <- julia_setup()
     
-    setwd(args[1])
+    setwd(file.path(args[1]))
     JuliaCall:::.julia$cmd("using RCall")
     
     
