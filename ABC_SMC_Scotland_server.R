@@ -31,8 +31,8 @@ rm(simdata)
 #### ABC set up ####
 
 G <- as.integer(cdargs[3]) # Number of particle generations
-N <- as.integer(cdargs[3]) # Number of accepted particles
-K <- as.integer(cdargs[4])
+N <- as.integer(cdargs[4]) # Number of accepted particles
+K <- as.integer(cdargs[5])
 nreps <- 50
 ntimes <- dim(Dorig)[2]
 nsum <- 2 # Number of individual summary statistics
