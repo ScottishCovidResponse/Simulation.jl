@@ -1,5 +1,6 @@
 
 
+args <- commandArgs(trailingOnly = TRUE)
 
 if(!require(tmvtnorm)){install.packages("tmvtnorms",dependencies=TRUE,lib = Sys.getenv("R_LIBS_USER"), repos='http://cran.rstudio.com/');library(tmvtnorm)}
 if(!require(lhs)){install.packages("lhs",dependencies=TRUE,lib = Sys.getenv("R_LIBS_USER"), repos='http://cran.rstudio.com/');library(lhs)}
@@ -54,7 +55,7 @@ Ascaled <- sapply(1:n_par,function(i)A[,i]*(parrange[2,i]-parrange[1,i])+parrang
 n <- 1
 
 if(parallel){
-  ncores <- 10#detectCores()-1
+  ncores <- args[1]#detectCores()-1
   myCluster <- makeCluster(ncores)
   clusterEvalQ(myCluster, {
     library(JuliaCall)
