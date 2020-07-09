@@ -95,6 +95,7 @@ for(g in 1:G){
       param <- lapply(1:ll,function(x)Ascaled[L[x],])
       currsamp <- c(currsamp,L)
     } else {
+      ll <- min(N-(i-1),ncores)
       #  Select particle from previous generation
       p<-sample(seq(1,N),ll,prob=w.old,replace=T)
       param<- lapply(1:ll,function(x)rK(res.old[p[x],],sigma))
