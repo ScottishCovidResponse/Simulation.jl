@@ -143,12 +143,6 @@ for(g in 1:G){
     abline(v=parrange[2,x],col=3)
   })
   
-  if(parallel){
-    stopCluster(cl)
-    rm(cl)
-    cl <- makeCluster(ncores)
-    registerDoSNOW(cl)
-  }
 }
 
 stop(myCluster)
