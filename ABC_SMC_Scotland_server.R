@@ -89,6 +89,7 @@ for(g in 1:G){
         currsamp <- c(currsamp,L)
       } else {
         ll <- min(max(N-(i-1),ncores),N)
+        ll <- ncores-ll%%ncores
         #  Select particle from previous generation
         p<-sample(seq(1,N),ll,prob=w.old,replace=T)
         param<- lapply(1:ll,function(x)rK(res.old[p[x],],sigma))
@@ -155,7 +156,7 @@ for(g in 1:G){
   
   if(parallel){
      stopCluster(cl)
-     
+     mpi.quit()
      rm(cl)
      cl <- makeCluster(ncores)
      registerDoSNOW(cl)
