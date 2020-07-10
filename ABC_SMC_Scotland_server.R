@@ -86,7 +86,7 @@ for(g in 1:G){
         ll <- ncores-ll%%ncores
         L <- sample(setdiff(1:K,currsamp),ll)
         param <- lapply(1:ll,function(x)Ascaled[L[x],])
-        currsamp <- c(currsamp,L)
+        
       } else {
         ll <- min(max(N-(i-1),ncores),N)
         ll <- ncores-ll%%ncores
@@ -118,22 +118,25 @@ for(g in 1:G){
     }
     
     for(kk in 1:ll){
-      if (m[kk]>0 & i<= N){
-        # Store results
-        res.new[i,]<-param[[kk]]
-        # Calculate weights
-        w1<-prod(sapply(1:n_par, function(b) dunif(res.new[i,b], min=parrange[1,b], max=parrange[2,b])))
-        if(g==1){
-          w2<-1
-        } else {
-          w2<-sum(sapply(1:N, function(a) w.old[a]* dtmvnorm(res.new[i,], mean=res.old[a,], sigma=sigma, lower=parrange[1,], upper=parrange[2,])))
+      if(i<=N){
+        if(parallel)currsamp <- c(currsamp,L[kk])
+        if (m[kk]>0){
+          # Store results
+          res.new[i,]<-param[[kk]]
+          # Calculate weights
+          w1<-prod(sapply(1:n_par, function(b) dunif(res.new[i,b], min=parrange[1,b], max=parrange[2,b])))
+          if(g==1){
+            w2<-1
+          } else {
+            w2<-sum(sapply(1:N, function(a) w.old[a]* dtmvnorm(res.new[i,], mean=res.old[a,], sigma=sigma, lower=parrange[1,], upper=parrange[2,])))
+          }
+          w.new[i] <- (m[kk]/n)*w1/w2
+          print(paste0('Generation: ', g, ", particle: ", i))
+          # Update counter
+          i <- i+1
+  
+          
         }
-        w.new[i] <- (m[kk]/n)*w1/w2
-        print(paste0('Generation: ', g, ", particle: ", i))
-        # Update counter
-        i <- i+1
-
-        
       }
     }
   }
