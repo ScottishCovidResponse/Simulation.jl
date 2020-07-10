@@ -5,8 +5,9 @@ cdargs <- commandArgs(trailingOnly = TRUE)
 if(!require(tmvtnorm)){install.packages("tmvtnorms",dependencies=TRUE,lib = Sys.getenv("R_LIBS_USER"), repos='http://cran.rstudio.com/');library(tmvtnorm)}
 if(!require(lhs)){install.packages("lhs",dependencies=TRUE,lib = Sys.getenv("R_LIBS_USER"), repos='http://cran.rstudio.com/');library(lhs)}
 if(!require(JuliaCall)){install.packages("JuliaCall",dependencies=TRUE,lib = Sys.getenv("R_LIBS_USER"), repos='http://cran.rstudio.com/');library(JuliaCall)}
-if(!require(parallel)){install.packages("parallel",dependencies=TRUE,lib = Sys.getenv("R_LIBS_USER"), repos='http://cran.rstudio.com/');library(parallel)}
-
+if(!require(foreach)){install.packages("foreach",dependencies=TRUE,lib = Sys.getenv("R_LIBS_USER"), repos='http://cran.rstudio.com/');library(foreach)}
+if(!require(snow)){install.packages("snow",dependencies=TRUE,lib = Sys.getenv("R_LIBS_USER"), repos='http://cran.rstudio.com/');library(snow)}
+if(!require(doSNOW)){install.packages("doSNOW",dependencies=TRUE,lib = Sys.getenv("R_LIBS_USER"), repos='http://cran.rstudio.com/');library(doSNOW)}
 
 set.seed(12345)
 parallel <- ifelse(as.integer(cdargs[2])>1,TRUE,FALSE) # Should be run in parallel? 
@@ -20,13 +21,12 @@ parorig <- c(10.0, 10.0, 20, 100, 0.1, 1.0)
 julia_assign("paramraw", parorig)
 
 julia_source('examples/Epidemiology/Scotland_run_inputs.jl')
-simdata <- julia_eval("abuns")
+simdata <- julia_eval("sum(abuns[41:48,:,:],dims=2)")
 
 
 # Load in model functions
 source("ABC_SMC_Scotland_preamble_server.R")
-Dorig <- simdata[41:48,,]
-Dorig <- apply(Dorig,c(1,3),sum)
+Dorig <- drop(simdata)
 rm(simdata)
 #### ABC set up ####
 
@@ -56,18 +56,9 @@ n <- 1
 
 if(parallel){
   ncores <- as.integer(cdargs[2])#detectCores()-1
-  myCluster <- makeCluster(ncores)
-  clusterExport(myCluster, c("cdargs"))
-  clusterEvalQ(myCluster, {
-    library(JuliaCall)
-    set.seed(12345)
-    
-    julia <- julia_setup()
-    setwd(as.character(cdargs[1]))
-    JuliaCall:::.julia$cmd("using RCall")
-    
-  })
-  clusterExport(myCluster, c("n","ntimes","nsum","nsumt","Dorig","epsilon","run_model","runmodpar","calc_distance"))
+  cl <- makeCluster(ncores)
+  registerDoSNOW(cl)
+  
 }else{
   ncores <- 1
 }
@@ -84,7 +75,7 @@ for(g in 1:G){
   
   #Initiate counter
   i<-1
-  if(parallel)clusterExport(myCluster, c("g"))
+  
   while(i <= N){ # While the number of accepted particles is less than N_particles
     
     if(g==1){
@@ -101,8 +92,12 @@ for(g in 1:G){
       param<- lapply(1:ll,function(x)rK(res.old[p[x],],sigma))
     }
     if(parallel){
-      clusterExport(myCluster, c("param"))
-      m <- unlist(parLapply(myCluster,1:ll,function(ii){runmodpar(param[[ii]])}))
+      output.lines <- foreach(i = (1:ll)) %dopar% {
+        library(JuliaCall)
+        setwd(as.character(cdargs[1]))
+        runmodpar(param[[i]])
+      }
+      m <- unlist(output.lines)
     }else{
       m <- runmodpar(param[[1]])
     }
@@ -148,18 +143,8 @@ for(g in 1:G){
   if(parallel){
     stopCluster(cl)
     rm(cl)
-    myCluster <- makeCluster(ncores)
-    clusterExport(myCluster, c("cdargs"))
-    clusterEvalQ(myCluster, {
-      library(JuliaCall)
-      set.seed(12345)
-      
-      julia <- julia_setup()
-      setwd(as.character(cdargs[1]))
-      JuliaCall:::.julia$cmd("using RCall")
-      
-    })
-    clusterExport(myCluster, c("n","ntimes","nsum","nsumt","Dorig","epsilon","run_model","runmodpar","calc_distance"))
+    cl <- makeCluster(ncores)
+    registerDoSNOW(cl)
   }
 }
 
