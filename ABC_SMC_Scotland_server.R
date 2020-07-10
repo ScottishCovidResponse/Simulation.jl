@@ -78,21 +78,20 @@ for(g in 1:G){
   
   while(i <= N){ # While the number of accepted particles is less than N_particles
     
-    if(g==1){
-      # Sample from prior distributions
-      # Sample from prior distributions
-      ll <- min(N-(i-1),N)
-      L <- sample(setdiff(1:K,currsamp),ll)
-      param <- lapply(1:ll,function(x)Ascaled[L[x],])
-      currsamp <- c(currsamp,L)
-    } else {
-      ll <- min(N-(i-1),N)
-      #  Select particle from previous generation
-      p<-sample(seq(1,N),ll,prob=w.old,replace=T)
-      param<- lapply(1:ll,function(x)rK(res.old[p[x],],sigma))
-    }
-    
     if(parallel){
+      if(g==1){
+        # Sample from prior distributions
+        # Sample from prior distributions
+        ll <- min(max(N-(i-1),ncores),N)
+        L <- sample(setdiff(1:K,currsamp),ll)
+        param <- lapply(1:ll,function(x)Ascaled[L[x],])
+        currsamp <- c(currsamp,L)
+      } else {
+        ll <- min(max(N-(i-1),ncores),N)
+        #  Select particle from previous generation
+        p<-sample(seq(1,N),ll,prob=w.old,replace=T)
+        param<- lapply(1:ll,function(x)rK(res.old[p[x],],sigma))
+      }
       
       m <- foreach(i = (1:ll), .combine='c') %dopar% {
         library(JuliaCall)
@@ -102,6 +101,17 @@ for(g in 1:G){
       }
       
     }else{
+      if(g==1){
+        # Sample from prior distributions
+        # Sample from prior distributions
+        L <- sample(setdiff(1:K,currsamp),1)
+        param <- lapply(1,function(x)Ascaled[L[x],])
+        currsamp <- c(currsamp,L)
+      } else {
+        #  Select particle from previous generation
+        p<-sample(seq(1,N),1,prob=w.old,replace=T)
+        param<- lapply(1,function(x)rK(res.old[p[x],],sigma))
+      }
       m <- runmodpar(param[[1]])
     }
     
