@@ -143,9 +143,19 @@ for(g in 1:G){
     abline(v=parrange[2,x],col=3)
   })
   
+  if(parallel){
+     stopCluster(cl)
+     
+     rm(cl)
+     cl <- makeCluster(ncores)
+     registerDoSNOW(cl)
+  }
+  
 }
 
-stop(myCluster)
+stopCluster(cl)
+
+rm(cl)
 # save(list=ls(),file="ABCmetadata.RData")
 save(list=c(res.new,w.new,Dorig,parorig,currsamp,epsilon,names.par),file="ABCmetadata.RData")
 ABC_SMC <- read.csv(paste0("results_case_2_ABC_SMC_gen_",G,".csv"))
