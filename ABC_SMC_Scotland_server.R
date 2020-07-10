@@ -91,12 +91,14 @@ for(g in 1:G){
       p<-sample(seq(1,N),ll,prob=w.old,replace=T)
       param<- lapply(1:ll,function(x)rK(res.old[p[x],],sigma))
     }
-    m <- rep(NA,ll)
+    
     if(parallel){
-      output.lines <- foreach(i = (1:ll)) %dopar% {
+      m <- rep(NA,ll)
+      output.lines <- foreach(i = (1:ll), .combine='c') %dopar% {
         library(JuliaCall)
         setwd(as.character(cdargs[1]))
         m[i] <-runmodpar(param[[i]])
+        print(m[i])
       }
       
     }else{
