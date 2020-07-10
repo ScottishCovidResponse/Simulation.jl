@@ -106,7 +106,7 @@ for(g in 1:G){
     }
     
     for(kk in 1:ll){
-      if (m[kk]>0){
+      if (m[kk]>0 & i<= N){
         # Store results
         res.new[i,]<-param[[kk]]
         # Calculate weights
@@ -120,8 +120,7 @@ for(g in 1:G){
         print(paste0('Generation: ', g, ", particle: ", i))
         # Update counter
         i <- i+1
-        
-        
+
         
       }
     }
