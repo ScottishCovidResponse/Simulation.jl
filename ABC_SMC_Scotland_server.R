@@ -90,12 +90,12 @@ for(g in 1:G){
     if(g==1){
       # Sample from prior distributions
       # Sample from prior distributions
-      ll <- min(N-(i-1),ncores)
+      ll <- min(N-(i-1),N)
       L <- sample(setdiff(1:K,currsamp),ll)
       param <- lapply(1:ll,function(x)Ascaled[L[x],])
       currsamp <- c(currsamp,L)
     } else {
-      ll <- min(N-(i-1),ncores)
+      ll <- min(N-(i-1),N)
       #  Select particle from previous generation
       p<-sample(seq(1,N),ll,prob=w.old,replace=T)
       param<- lapply(1:ll,function(x)rK(res.old[p[x],],sigma))
@@ -144,6 +144,23 @@ for(g in 1:G){
     abline(v=parrange[1,x],col=3);
     abline(v=parrange[2,x],col=3)
   })
+  
+  if(parallel){
+    stopCluster(cl)
+    rm(cl)
+    myCluster <- makeCluster(ncores)
+    clusterExport(myCluster, c("cdargs"))
+    clusterEvalQ(myCluster, {
+      library(JuliaCall)
+      set.seed(12345)
+      
+      julia <- julia_setup()
+      setwd(as.character(cdargs[1]))
+      JuliaCall:::.julia$cmd("using RCall")
+      
+    })
+    clusterExport(myCluster, c("n","ntimes","nsum","nsumt","Dorig","epsilon","run_model","runmodpar","calc_distance"))
+  }
 }
 
 stop(myCluster)
