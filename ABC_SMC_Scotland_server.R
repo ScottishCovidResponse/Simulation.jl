@@ -93,12 +93,12 @@ for(g in 1:G){
     }
     
     if(parallel){
-      m <- rep(NA,ll)
-      output.lines <- foreach(i = (1:ll), .combine='c') %dopar% {
+      
+      m <- foreach(i = (1:ll), .combine='c') %dopar% {
         library(JuliaCall)
         setwd(as.character(cdargs[1]))
-        m[i] <-runmodpar(param[[i]])
-        print(m[i])
+        runmodpar(param[[i]])
+
       }
       
     }else{
