@@ -83,6 +83,7 @@ for(g in 1:G){
         # Sample from prior distributions
         # Sample from prior distributions
         ll <- min(max(N-(i-1),ncores),N)
+        ll <- ncores-ll%%ncores
         L <- sample(setdiff(1:K,currsamp),ll)
         param <- lapply(1:ll,function(x)Ascaled[L[x],])
         currsamp <- c(currsamp,L)
