@@ -79,7 +79,6 @@ runmodpar <- function(param){ #also needs [n,nsum,Dorig,epsilon,g]
       }
       sind <- sind + 1
     }
-    print(distances)
     if(dthr==0){ # If both distances are less than their tolerances
       distanceall[j,] <- distances
       m<-m+1
