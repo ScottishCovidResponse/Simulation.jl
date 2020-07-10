@@ -154,14 +154,7 @@ for(g in 1:G){
     abline(v=parrange[2,x],col=3)
   })
   
-  if(parallel){
-     stopCluster(cl)
-     mpi.quit()
-     rm(cl)
-     cl <- makeCluster(ncores)
-     registerDoSNOW(cl)
-  }
-  
+
 }
 
 stopCluster(cl)
