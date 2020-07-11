@@ -7,5 +7,5 @@ using Pkg
 
 
 println("Adding SimulationData...")
-Pkg.add(PackageSpec(url="https://github.com/ScottishCovidResponse/SimulationData.jl"))
+Pkg.develop(PackageSpec(url="https://github.com/ScottishCovidResponse/SimulationData.jl"))
 Pkg.build("SimulationData")
