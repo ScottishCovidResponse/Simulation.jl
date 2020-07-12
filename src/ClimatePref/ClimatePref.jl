@@ -2,9 +2,9 @@ using Requires
 function initialise_ECMWF()
     println("Creating ECMWF interface ...")
     include("ERA_interim_tools.jl")
-    export retrieve_era_interim
+    #export retrieve_era_interim
     include("ECMWF_tools.jl")
-    export retrieve_ECMWF
+    #export retrieve_ECMWF
 end
 
 include("ClimateTypes.jl")
