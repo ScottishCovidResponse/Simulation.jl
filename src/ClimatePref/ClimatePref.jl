@@ -3,8 +3,9 @@ function __init__()
     @require PyCall="438e738f-606a-5dbb-bf0a-cddfbfd45ab0" begin
         println("Creating ECMWF interface ...")
         include("ERA_interim_tools.jl")
+        export retrieve_era_interim
         include("ECMWF_tools.jl")
-
+        export retrieve_ECMWF
     end
 end
 
