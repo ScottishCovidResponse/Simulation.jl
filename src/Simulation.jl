@@ -6,14 +6,15 @@ using SimulationData
 using SimulationData.Units
 
 
+
+
+module ClimatePref
+
 """
     env_bool(key)
 Checks for an enviroment variable and fuzzy converts it to a bool
 """
 env_bool(key, default=false) = haskey(ENV, key) ? lowercase(ENV[key]) ∉ ["0","","false", "no"] : default
-
-
-module ClimatePref
 
 include("ClimatePref/ClimatePref.jl")
 
