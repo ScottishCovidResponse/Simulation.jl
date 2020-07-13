@@ -43,6 +43,5 @@ before_cache:
 
 cache:
   directories:
-    - ~/.julia
     - ~/openmpi
     - ~/openmpi-4.0.3
