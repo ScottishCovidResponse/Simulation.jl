@@ -2,7 +2,6 @@
 language: julia
 os:
   - linux
-  - osx
 julia: # https://github.com/ScottishCovidResponse/SCRCIssueTracking/issues/16
   - 1.4
   - 1.5
