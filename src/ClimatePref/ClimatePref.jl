@@ -1,6 +1,6 @@
 using Requires
 function __init__()
-    if env_bool("TRAVIS_CI_BUILD")
+    if !env_bool("TRAVIS")
         @require PyCall="438e738f-606a-5dbb-bf0a-cddfbfd45ab0" begin
             println("Creating ECMWF interface ...")
             include("ERA_interim_tools.jl")
