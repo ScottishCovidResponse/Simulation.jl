@@ -9,9 +9,6 @@ julia: # https://github.com/ScottishCovidResponse/SCRCIssueTracking/issues/16
 notifications:
   email: false
 
-env:
-  TRAVIS_CI_BUILD=true
-
 jobs:
   allow_failures:
     - julia: 1.5
