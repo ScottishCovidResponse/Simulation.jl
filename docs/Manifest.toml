@@ -226,9 +226,9 @@ version = "0.8.2"
 
 [[Documenter]]
 deps = ["Base64", "Dates", "DocStringExtensions", "InteractiveUtils", "JSON", "LibGit2", "Logging", "Markdown", "REPL", "Test", "Unicode"]
-git-tree-sha1 = "395fa1554c69735802bba37d9e7d9586fd44326c"
+git-tree-sha1 = "f3464968c65fc78846dad1c038c474a2c39bbb23"
 uuid = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
-version = "0.24.11"
+version = "0.25.0"
 
 [[DoubleFloats]]
 deps = ["GenericSVD", "GenericSchur", "LinearAlgebra", "Polynomials", "Printf", "Quadmath", "Random", "Requires", "SpecialFunctions"]
@@ -793,9 +793,9 @@ version = "0.9.2"
 
 [[Simulation]]
 deps = ["ArchGDAL", "AxisArrays", "Calculus", "Compat", "Conda", "DataAPI", "DataFrames", "Dates", "Distributions", "Diversity", "EcoBase", "Feather", "HCubature", "HDF5", "IndexedTables", "Interpolations", "JLD", "JLSO", "JuliaDB", "LibGit2", "Libdl", "LinearAlgebra", "Logging", "Markdown", "Measures", "Missings", "NetCDF", "OnlineStats", "OnlineStatsBase", "Phylo", "Pkg", "Printf", "REPL", "Random", "RecipesBase", "Requires", "SHA", "SimulationData", "Statistics", "StatsBase", "UUIDs", "Unitful"]
-path = "/Users/alexrobson/Projects/SCRC/Simulation.jl"
+path = ".."
 uuid = "ed2dc23b-ada4-5fdb-a26f-56368a14ad8f"
-version = "2.9.0+"
+version = "0.1.0"
 
 [[SimulationData]]
 deps = ["Conda", "DataDeps", "DataFrames", "Distributions", "HDF5", "Pandas", "Pkg", "PyCall", "Test", "Unitful"]
