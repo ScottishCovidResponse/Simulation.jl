@@ -3,7 +3,7 @@ run_model <- function(params){
   julia_assign("paramraw", params)
   julia_source('examples/Epidemiology/Scotland_run_inputs.jl')
   y <- julia_eval("sum(abuns,dims=2)")
-  return(drop(y[41:48,,]))
+  return(drop(y[71:80,,]))
 }
 
 

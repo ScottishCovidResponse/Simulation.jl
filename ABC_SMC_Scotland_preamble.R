@@ -1,9 +1,8 @@
 run_model <- function(params){
-  #Function to run model with dede or lsoda
   julia_assign("paramraw", params)
   julia_source('examples/Epidemiology/Scotland_run_inputs.jl')
   y <- julia_eval("abuns")
-  y<-y[41:48,,]
+  #y<-y[41:48,,]
   return(apply(y,c(1,3),sum) )
 }
 

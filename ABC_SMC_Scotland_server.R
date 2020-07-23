@@ -21,7 +21,7 @@ parorig <- c(10.0, 10.0, 20, 100, 0.1, 1.0)
 julia_assign("paramraw", parorig)
 
 julia_source('examples/Epidemiology/Scotland_run_inputs.jl')
-simdata <- julia_eval("sum(abuns[41:48,:,:],dims=2)")
+simdata <- julia_eval("sum(abuns[71:80,:,:],dims=2)")
 
 
 # Load in model functions
