@@ -37,7 +37,7 @@ nreps <- 50
 ntimes <- dim(Dorig)[2]
 nsum <- 2 # Number of individual summary statistics
 nsumt <- as.integer(cdargs[6]) # Number of individual summary statistics including compartment specific ones
-epsilon <- matrix(c(sapply(1:G,function(i)60000*(0.85**(i-1))),sapply(1:G ,function(i)10*(0.9**(i-1)))),nrow=2,byrow=T) # Epsilon value(s) of length nsum
+epsilon <- matrix(c(sapply(1:G,function(i)30000*(0.85**(i-1))),sapply(1:G ,function(i)10*(0.9**(i-1)))),nrow=2,byrow=T) # Epsilon value(s) of length nsum
 n_par <- 6 # How many parameters will be estimated
 names.par <- c("Beta env","Beta force","Birth_rate","Death_rate","Virus growth","Virus decay")
 res <- matrix(ncol = n_par + nsumt, nrow = N) # Empty matrix to store results
