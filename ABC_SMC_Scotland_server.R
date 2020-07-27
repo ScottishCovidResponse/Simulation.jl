@@ -21,7 +21,7 @@ parorig <- c(10.0, 10.0, 20, 100, 0.1, 1.0)
 julia_assign("paramraw", parorig)
 
 julia_source('examples/Epidemiology/Scotland_run_inputs.jl')
-simdata <- julia_eval("sum(abuns[71:80,:,:],dims=2)")
+simdata <- julia_eval("sum(abuns[41:50,:,:],dims=2)")
 
 
 # Load in model functions
@@ -167,10 +167,11 @@ rm(cl)
 save(list=c(res.new,w.new,Dorig,parorig,currsamp,epsilon,names.par),file="ABCmetadata.RData")
 ABC_SMC <- read.csv(paste0("results_case_2_ABC_SMC_gen_",G,".csv"))
 par(mfrow=c(2,3))
-sapply(1:n_par,function(x){hist(ABC_SMC[,x],xlim=c(parrange[1,x],parrange[2,x]),main=names.par[x],probability=T)
-  abline(v=parorig[x],col=2);
-  abline(v=parrange[1,x],col=3);
-  abline(v=parrange[2,x],col=3)
+sapply(1:n_par,function(x){hist(ABC_SMC[,x],xlim=c(parrange[1,x],parrange[2,x]),main=names.par[x],probability=T,xlab="")
+  abline(v=parorig[x],col=2,lwd=2);
+  abline(v=parrange[1,x],col=3,lwd=2);
+  abline(v=parrange[2,x],col=3,lwd=2)
+  abline(v=mean(ABC_SMC[,x]),col=4,lwd=2,lty=2)
 })
 
 xx<-data.frame(cbind(parorig,apply(ABC_SMC[,1:n_par],2,mean),apply(ABC_SMC[,1:n_par],2,median),apply(ABC_SMC[,1:n_par],2,sd),(parorig-apply(ABC_SMC[,1:n_par],2,median))/apply(ABC_SMC[,1:n_par],2,median)),row.names = names.par)
