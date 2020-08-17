@@ -49,7 +49,7 @@ function eltype(tr::Trapeze{TR}) where TR
 end
 
 """
-    Trapeze{TR} <: AbstractTraitRelationship{TR}
+    Uniform{TR} <: AbstractTraitRelationship{TR}
 
 The relationship between a continuous trait and its environment,
 paramaterised on any TR.

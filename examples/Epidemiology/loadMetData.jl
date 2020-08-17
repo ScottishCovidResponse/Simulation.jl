@@ -84,7 +84,7 @@ function run_model(climatearray::AxisArray, times::Unitful.Time, interval::Unitf
     param = transition(param, age_categories)
 
     total_pop.data[isnan.(climatearray[:, :, 1])] .= NaN
-    epienv = ukclimateAE(climatearray, area, NoControl(), total_pop)
+    epienv = ukclimateAE(climatearray, area, NoControl())
 
     # Set population to initially have no individuals
     abun_h = (
@@ -113,13 +113,13 @@ function run_model(climatearray::AxisArray, times::Unitful.Time, interval::Unitf
     movement = AlwaysMovement(kernel)
 
     # Traits for match to environment (turned off currently through param choice, i.e. virus matches environment perfectly)
-    traits = GaussTrait(fill(279.0K, numvirus), fill(5.0K, numvirus))
+    traits = ExponentialTrait(fill(-4.0°C, numvirus))
     epilist = EpiList(traits, abun_v, abun_h, disease_classes,
                       movement, param, age_categories)
-    rel = Gauss{eltype(epienv.habitat)}()
+    rel = ExponentialDecay{eltype(epienv.habitat)}()
 
     # Create epi system with all information
-    epi = EpiSystem(epilist, epienv, rel)
+    epi = EpiSystem(epilist, epienv, rel, total_pop)
 
     # Populate susceptibles according to actual population spread
     reshaped_pop =

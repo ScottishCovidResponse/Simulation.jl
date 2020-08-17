@@ -124,6 +124,9 @@ export EpiSystem
 
 include("Epidemiology/EpiTraits.jl")
 
+include("Epidemiology/VirusRelationship.jl")
+export ExponentialDecay, ExponentialTrait
+
 include("Epidemiology/EpiGenerate.jl")
 export populate!
 
