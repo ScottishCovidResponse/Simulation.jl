@@ -1,44 +1,20 @@
 module Simulation
 
-module Units
+using Unitful
+using Unitful.DefaultSymbols
+using SimulationData
+using SimulationData.Units
 
-import Unitful
-using Unitful: @unit
-day = Unitful.d
-week = Unitful.wk
-year = Unitful.yr
-@unit month "month" Month 2.628e6 * Unitful.s false
 
-const days = day
-const weeks = week
-const months = month
-const years = year
-const January = 0month
-const February = 1month
-const March = 2months
-const April = 3months
-const May = 4months
-const June = 5months
-const July = 6months
-const August = 7months
-const September = 8months
-const October = 9months
-const November = 10months
-const December = 11months
 
-const localunits = Unitful.basefactors
-function __init__()
-    merge!(Unitful.basefactors, localunits)
-    Unitful.register(Units)
-end
-
-export day, days, week, weeks, month, months, year, years, Rates,
-January, February, March, April, May, June, July, August,
-September, October, November, December
-
-end
 
 module ClimatePref
+
+"""
+    env_bool(key)
+Checks for an enviroment variable and fuzzy converts it to a bool
+"""
+env_bool(key, default=false) = haskey(ENV, key) ? lowercase(ENV[key]) ∉ ["0","","false", "no"] : default
 
 include("ClimatePref/ClimatePref.jl")
 
@@ -46,6 +22,14 @@ end
 
 using TimerOutputs
 const TIMING = TimerOutput()
+
+"""
+    enum: DiseaseState
+
+    Disease state of a group, from: Susceptible Infectious Removed OtherDiseaseState
+"""
+@enum DiseaseState Susceptible Infectious Removed OtherDiseaseState
+export Susceptible, Infectious, Removed, OtherDiseaseState
 
 include("Biodiversity/Dist.jl")
 export Trapezoid
@@ -125,17 +109,23 @@ export DiversitySet, updatesimulation!, gettimes
 include("Biodiversity/AdditionalDiversity.jl")
 export meta_simpson, meta_shannon, meta_speciesrichness, mean_abun, geom_mean_abun, sorenson, pd, makeunique
 
+include("Epidemiology/MedianGenerator.jl")
+export MedianGenerator
+
 include("Epidemiology/data_utils.jl")
 export parse_hdf5
 
 include("Epidemiology/EpiControl.jl")
-export NoControl
+export NoControl, Lockdown
 
 include("Epidemiology/EpiEnv.jl")
-export GridEpiEnv, simplehabitatAE
+export GridEpiEnv, simplehabitatAE, ukclimateAE
 
 include("Epidemiology/EpiParams.jl")
-export SISGrowth, SIRGrowth, SEIRGrowth, SEIRSGrowth, SEI2HRDGrowth, SEI3HRDGrowth, transition
+export transition
+
+include("Epidemiology/EpiMove.jl")
+export EpiMovement, Commuting
 
 include("Epidemiology/EpiList.jl")
 export EpiList, SIS, SIR, SEIR, SEIRS, SEI2HRD
@@ -157,7 +147,10 @@ export simulate!, simulate_record!
 include("Epidemiology/EpiPlots.jl")
 
 include("Epidemiology/Inference.jl")
-export SIR_wrapper, SIR_wrapper!
+export SIR_wrapper, SIR_wrapper!, SEI3HRD_wrapper, SEI3HRD_wrapper!
+
+include("Epidemiology/shrink.jl")
+export shrink_to_active, convert_population
 
 # Path into package
 path(paths...) = joinpath(@__DIR__, "..", paths...)
