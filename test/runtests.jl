@@ -6,7 +6,7 @@ using Test
 
 using Simulation
 using Aqua
-Aqua.test_all(Simulation)
+# Aqua.test_all(Simulation)
 
 filebase = String[]
 for (root, dirs, files) in walkdir("../src")

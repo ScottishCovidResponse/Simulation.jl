@@ -12,17 +12,17 @@ function update!(epi::EpiSystem, timestep::Unitful.Time)
     seedinfected!(epi, epi.epienv.control, timestep)
 
     # Virus movement loop
-    @timeit_debug TIMING "virusupdate!" virusupdate!(epi, timestep)
+    @timeit_debug TIMINGS[Threads.threadid()] "virusupdate!" virusupdate!(epi, timestep)
 
     # Birth/death/infection/recovery loop of each class
-    @timeit_debug TIMING "classupdate!" classupdate!(epi, timestep)
+    @timeit_debug TIMINGS[Threads.threadid()] "classupdate!" classupdate!(epi, timestep)
 
     # Invalidate all caches for next update
-    @timeit_debug TIMING "invalidatecaches!" invalidatecaches!(epi)
+    @timeit_debug TIMINGS[Threads.threadid()] "invalidatecaches!" invalidatecaches!(epi)
 
     # Update environment - habitat and energy budgets
-    @timeit_debug TIMING "habitatupdate!" habitatupdate!(epi, timestep)
-    @timeit_debug TIMING "applycontrols!" applycontrols!(epi, timestep)
+    @timeit_debug TIMINGS[Threads.threadid()] "habitatupdate!" habitatupdate!(epi, timestep)
+    @timeit_debug TIMINGS[Threads.threadid()] "applycontrols!" applycontrols!(epi, timestep)
 end
 
 function seedinfected!(epi::EpiSystem, controls::NoControl, timestep::Unitful.Time)
@@ -54,7 +54,7 @@ end
 Function to update virus abundances and disperse for one timestep.
 """
 function virusupdate!(epi::EpiSystem, timestep::Unitful.Time)
-    @timeit_debug TIMING "rest virus update" begin
+    @timeit_debug TIMINGS[Threads.threadid()] "rest virus update" begin
         dims = _countsubcommunities(epi.epienv.habitat)
         width = getdimension(epi)[1]
         params = epi.epilist.params
@@ -67,19 +67,19 @@ function virusupdate!(epi::EpiSystem, timestep::Unitful.Time)
     end
     # Loop through grid squares
     function firstloop(i)
-        @timeit_debug TIMING "firstloop" begin
+        @timeit_debug TIMINGS[Threads.threadid()] "firstloop" begin
             for j in activejindices
                 # Calculate how much birth and death should be adjusted
 
                 # Calculate effective rates
-                @timeit_debug TIMING "birth draw" begin
+                @timeit_debug TIMINGS[Threads.threadid()] "birth draw" begin
                     birthrate = params.virus_growth[i] * timestep * human(epi.abundances)[i, j]
                     births = rand(rng, Poisson(birthrate))
                 end
 
                 # Spread force of infection over space
                 if !iszero(births)
-                    @timeit_debug TIMING "virusmove" virusmove!(epi, i, j, epi.cache.virusmigration, births)
+                    @timeit_debug TIMINGS[Threads.threadid()] "virusmove" virusmove!(epi, i, j, epi.cache.virusmigration, births)
                 end
             end
         end
@@ -96,17 +96,17 @@ function virusupdate!(epi::EpiSystem, timestep::Unitful.Time)
     ages = length(unique(human_to_force))
 
     function secondloop(j)
-        @timeit_debug TIMING "secondloop" begin
+        @timeit_debug TIMINGS[Threads.threadid()] "secondloop" begin
             vm = zeros(eltype(epi.cache.virusmigration), ages)
             for i in classes
                 # after wait virusmigration[i, j] will be up to date
                 haskey(firstlooptasks, i) && Threads.wait(firstlooptasks[i])
                 iszero(epi.cache.virusmigration[i, j]) && continue
-                @timeit_debug TIMING "Poisson" begin
-                    @timeit_debug TIMING "Poisson creation" begin
+                @timeit_debug TIMINGS[Threads.threadid()] "Poisson" begin
+                    @timeit_debug TIMINGS[Threads.threadid()] "Poisson creation" begin
                         dist = Poisson(epi.cache.virusmigration[i, j])
                     end
-                    @timeit_debug TIMING "Poisson rand" begin
+                    @timeit_debug TIMINGS[Threads.threadid()] "Poisson rand" begin
                         epi.cache.virusmigration[i, j] = rand(rng, dist)
                     end
                 end
