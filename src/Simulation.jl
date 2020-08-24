@@ -21,7 +21,7 @@ include("ClimatePref/ClimatePref.jl")
 end
 
 using TimerOutputs
-const TIMING = TimerOutput()
+const TIMINGS = [TimerOutput() for _ in 1:Threads.nthreads()]
 
 """
     enum: DiseaseState
@@ -46,7 +46,7 @@ include("Biodiversity/Habitats.jl")
 export ContinuousHab,ContinuousTimeHab, DiscreteHab, HabitatCollection2, HabitatCollection3, tempgrad, raingrad
 
 include("Biodiversity/Energy.jl")
-export SimpleRequirement, SizeRequirement, SolarRequirement, WaterRequirement, VolWaterRequirement, SimpleBudget, SolarBudget, SolarTimeBudget, WaterTimeBudget, VolWaterTimeBudget, ReqCollection2, BudgetCollection2
+export SimpleRequirement, SizeRequirement, SolarRequirement, WaterRequirement, VolWaterRequirement, SimpleBudget, SolarBudget, SolarTimeBudget, WaterBudget, WaterTimeBudget, VolWaterTimeBudget, ReqCollection2, BudgetCollection2
 
 include("Biodiversity/AbioticEnv.jl")
 export GridAbioticEnv, simplenicheAE, tempgradAE, raingradAE, peakedgradAE, simplehabitatAE, degradedhabitatAE, eraAE, worldclimAE
@@ -118,6 +118,9 @@ export parse_hdf5
 include("Epidemiology/EpiControl.jl")
 export NoControl, Lockdown
 
+include("Epidemiology/shrink.jl")
+export shrink_to_active, convert_population
+
 include("Epidemiology/EpiEnv.jl")
 export GridEpiEnv, simplehabitatAE, ukclimateAE
 
@@ -148,9 +151,6 @@ include("Epidemiology/EpiPlots.jl")
 
 include("Epidemiology/Inference.jl")
 export SIR_wrapper, SIR_wrapper!, SEI3HRD_wrapper, SEI3HRD_wrapper!
-
-include("Epidemiology/shrink.jl")
-export shrink_to_active, convert_population
 
 # Path into package
 path(paths...) = joinpath(@__DIR__, "..", paths...)

@@ -16,7 +16,9 @@ const seed = hash(time()) # seed used for Random.jl and therefore rngs used in S
 Random.seed!(seed)
 
 TimerOutputs.enable_debug_timings(Simulation)
-reset_timer!(Simulation.TIMING);
+for i in 1:Threads.nthreads()
+    reset_timer!(Simulation.TIMINGS[i]);
+end
 
 function run_model(times::Unitful.Time, interval::Unitful.Time, timestep::Unitful.Time, do_plot::Bool = false)
 
@@ -152,5 +154,6 @@ else
     abuns_run1 == abuns_run2 || @error "Deterministic runs are different..."
 end
 
-Simulation.TIMING
+Simulation.TIMINGS[1]
+Simulation.TIMINGS[2]
 TimerOutputs.flatten(Simulation.TIMING)

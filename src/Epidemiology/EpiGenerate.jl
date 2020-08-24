@@ -44,7 +44,7 @@ function seedinfected!(epi::EpiSystem, controls::Lockdown, timestep::Unitful.Tim
             end
         end
     elseif controls.current_date == controls.lockdown_date
-        println("Lockdown initiated - $(sum(human(epi.abundances)[epi.epilist.human.susceptible .+ length(epi.epilist.human.susceptible), :])) individuals infected")
+        @info "Lockdown initiated - $(sum(human(epi.abundances)[epi.epilist.human.susceptible .+ length(epi.epilist.human.susceptible), :])) individuals infected"
     end
     return controls
 end
@@ -102,8 +102,14 @@ function virusupdate!(epi::EpiSystem, timestep::Unitful.Time)
                 # after wait virusmigration[i, j] will be up to date
                 haskey(firstlooptasks, i) && Threads.wait(firstlooptasks[i])
                 iszero(epi.cache.virusmigration[i, j]) && continue
-                dist = Poisson(epi.cache.virusmigration[i, j])
-                epi.cache.virusmigration[i, j] = rand(rng, dist)
+                @timeit_debug TIMING "Poisson" begin
+                    @timeit_debug TIMING "Poisson creation" begin
+                        dist = Poisson(epi.cache.virusmigration[i, j])
+                    end
+                    @timeit_debug TIMING "Poisson rand" begin
+                        epi.cache.virusmigration[i, j] = rand(rng, dist)
+                    end
+                end
                 # Put force of infection from this class into right group
                 vm[human_to_force[i]] += epi.cache.virusmigration[i, j]
             end

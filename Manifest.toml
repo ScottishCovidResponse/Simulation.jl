@@ -12,6 +12,12 @@ git-tree-sha1 = "0fac443759fa829ed8066db6cf1077d888bb6573"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 version = "2.0.2"
 
+[[Aqua]]
+deps = ["Pkg", "Test"]
+git-tree-sha1 = "00a216a6fd982ae5a8d1dbcc1ef89dd9d2685ebc"
+uuid = "4c88cf16-eb10-579e-8560-4a9242c79595"
+version = "0.4.4"
+
 [[ArchGDAL]]
 deps = ["DataStreams", "Dates", "GDAL", "GeoFormatTypes", "GeoInterface"]
 git-tree-sha1 = "43ac6cd3fecfe21c48d7edaa4829a6c7c8418764"
