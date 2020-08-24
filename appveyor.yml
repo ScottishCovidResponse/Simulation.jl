@@ -1,9 +1,7 @@
 environment:
   matrix:
   - julia_version: 1.4
-    python_version: "Conda"
   - julia_version: 1.5
-    python_version: "Conda"
 
 platform:
   - x86
