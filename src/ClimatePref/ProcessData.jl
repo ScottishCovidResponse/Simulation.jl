@@ -18,15 +18,16 @@ function processMet(dir::String, param::String, xmin::Float64 = 5513.0, xmax::Fl
     @rput dir
     R"library(raster);
     tmpin = raster(dir)
+    # Rotated lat/lon crs
     crs(tmpin) = '+proj=ob_tran +o_proj=longlat +lon_0=357.5 +o_lon_p=0 +o_lat_p=37.5 +a=6371229 +b=6371229 +to_meter=0.0174532925199 +wktext'
     extent(tmpin)[1] = extent(tmpin)[1] - 360
     extent(tmpin)[2] = extent(tmpin)[2] - 360
     ext = extent(xmin, xmax, ymin, ymax)
+    # British national grid crs
     proj = '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs'
     resol = c(res, res)
     r = raster(ext = ext, resolution = resol, crs = proj)
-    reproj = projectRaster(from = tmpin, crs = proj)
-    reproj = resample(reproj, r)
+    reproj = projectRaster(from = tmpin, to = r)
     newdat = reproj@data@values
     x = reproj@nrows
     y = reproj@ncols
