@@ -12,7 +12,7 @@ using Random
 using DataFrames
 using Plots
 
-function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.Time, timestep::Unitful.Time; do_plot::Bool = false, do_download::Bool = true, save::Bool = false, savepath::String = pwd())
+function create_epi(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.Time, timestep::Unitful.Time; save::Bool = false, savepath::String = pwd())
     # Download and read in population sizes for Scotland
     scotpop = parse_scottish_population(api)
 
@@ -193,7 +193,19 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     epi.epilist.human.work_balance[cat_idx[1:2, :]] .= 0.0
     epi.epilist.human.work_balance[cat_idx[7:10, :]] .= 0.0
 
+    save && Simulation.save(joinpath(savepath, "initial_system.jlso"), epi)
+    return epi
+end
+
+function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.Time, timestep::Unitful.Time; do_plot::Bool = false, do_download::Bool = true, save::Bool = false, savepath::String = pwd())
+    epifile = joinpath(savepath, "initial_system.jlso")
+    if isfile(epifile)
+        @time epi = Simulation.load(epifile, EpiSystem)
+    else
+        epi = create_epi(api, times, interval, timestep, save = true, savepath = savepath)
+    end
     # Run simulation
+    N_cells = size(epi.abundances.matrix, 2)
     abuns = zeros(UInt32, size(epi.abundances.matrix, 1), N_cells, floor(Int, times/timestep) + 1)
     @time simulate_record!(abuns, epi, times, interval, timestep, save = save, save_path = savepath)
 
@@ -223,5 +235,5 @@ download_data_registry(config)
 
 times = 2months; interval = 1day; timestep = 1day
 abuns = StandardAPI(config, "test_uri", "test_git_sha") do api
-    run_model(api, times, interval, timestep)
+    run_model(api, times, interval, timestep, savepath = "data/")
 end;
