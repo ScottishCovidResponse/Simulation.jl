@@ -82,3 +82,51 @@ function parse_scottish_population(api::DataPipelineAPI; product="human/demograp
 
     return population
 end
+
+"""
+    parse_scottish_population(api::DataPipelineAPI; product="human/demographics/population/scotland", component="grid1km/age/persons", aggregate_age=10)
+
+Parse HDF5-format file of Scottish Population sizes at `product`, containing `component`. The data can be aggregated by age, `aggregate_age`, but otherwise is binned in yearly intervals, starting at zero and going up to 90+.
+"""
+function parse_pollution(api::DataPipelineAPI; product="records/pollution", component="array")
+
+    data = read_array(api, product, component)
+
+    # Get rows and columns
+    splitnames = map(x -> split(x, "-"), data.dimensions[1].names)
+    cell_ids = map(splitnames) do sp
+        if sum(sp .== "") > 0
+            sp = sp[sp .!= ""]
+            parsed = parse.(Int, sp)
+            parsed[1] *= -1
+            return parsed
+        else
+            return parse.(Int, sp)
+        end
+    end
+    max_x = maximum(getindex.(cell_ids, 1))
+    min_x = minimum(getindex.(cell_ids, 1))
+    max_y = maximum(getindex.(cell_ids, 2))
+    min_y = minimum(getindex.(cell_ids, 2))
+
+    # Create empty grid
+    cell_size = 1000
+    units = m
+    xs = min_x:cell_size:max_x
+    ys = min_y:cell_size:max_y
+    pollution = AxisArray(
+        zeros(Float64, length(xs), length(ys), 2),
+        # Placing the coordinates of the cell as the distance between its
+        # origin and origin of the grid.
+        grid_x=[units * i for i in xs],
+        grid_y=[units * i for i in ys],
+        pollutant=["pm2-5", "pm10"],
+    )
+
+    # Populate grid
+    for (id, pop) in zip(cell_ids, eachcol(data.data))
+        pollution[grid_x = id[1] * m, grid_y = id[2] * m] = pop
+    end
+
+    return pollution
+end
