@@ -17,7 +17,6 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     scotpop = parse_scottish_population(api)
     pollution = parse_pollution(api)
     pollution = pollution[5513m .. 470513m, 531500m .. 1221500m, :]
-    
 
     # Read number of age categories
     age_categories = size(scotpop, 3)
@@ -152,9 +151,9 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     beta_env = fill(10.0/day, age_categories)
     age_mixing = fill(1.0, age_categories, age_categories)
 
-    param = (birth = birth_rates, death = death_rates, virus_growth = [virus_growth_asymp virus_growth_presymp virus_growth_symp], virus_decay = virus_decay, beta_force = beta_force, beta_env = beta_env, age_mixing = age_mixing)
+    param = (birth = birth_rates, death = death_rates, virus_growth = [virus_growth_asymp virus_growth_presymp virus_growth_symp], virus_decay = virus_decay, beta_force = beta_force, beta_env = beta_env, age_mixing = age_mixing, pollution_infectivity = 0.17/(μg * m^-3))
 
-    epienv = simplehabitatAE(298.0K, size(total_pop), area, Lockdown(20days))
+    epienv = simplehabitatAE(298.0K, size(total_pop), area, Lockdown(20days), pollution = GriddedPollution(pollution[pollutant = "pm2-5"]))
 
     movement_balance = (home = fill(0.5, numclasses * age_categories), work = fill(0.5, numclasses * age_categories))
 

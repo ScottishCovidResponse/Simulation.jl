@@ -1,5 +1,5 @@
 function _compartment_idx(compartment, names)
-    idx = findfirst(names .== compartment)
+    idx = findfirst(v -> occursin(compartment, v), names)
     isnothing(idx) && throw(ArgumentError("Compartment $compartment not in $names"))
     return idx
 end

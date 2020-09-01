@@ -177,6 +177,8 @@ function classupdate!(epi::EpiSystem, timestep::Unitful.Time)
         # will result +=/-= 0 at end of inner loop, so safe to skip
         iszero(sum_pop(human(epi.abundances), j)) && continue
 
+        pol = get_pollution(epi.epienv, j)
+
         rng = epi.abundances.rngs[Threads.threadid()]
         N = sum_pop(epi.abundances.matrix, j)
         # Loop through classes in chosen square
@@ -204,7 +206,7 @@ function classupdate!(epi::EpiSystem, timestep::Unitful.Time)
                     (N^params.freq_vs_density_env)
 
                 # Direct transmission infection rate from k to i
-                force_inf = (params.age_mixing[k_age_cat, :] ⋅
+                force_inf = pol * params.pollution_infectivity * (params.age_mixing[k_age_cat, :] ⋅
                              virus(epi.abundances)[force_cats, j]) /
                     (N^params.freq_vs_density_force)
 
