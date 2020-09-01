@@ -115,7 +115,7 @@ function parse_pollution(api::DataPipelineAPI; product="records/pollution", comp
     xs = min_x:cell_size:max_x
     ys = min_y:cell_size:max_y
     pollution = AxisArray(
-        zeros(Float64, length(xs), length(ys), 2),
+        zeros(typeof(1.0µg*m^-3), length(xs), length(ys), 2),
         # Placing the coordinates of the cell as the distance between its
         # origin and origin of the grid.
         grid_x=[units * i for i in xs],
@@ -125,8 +125,7 @@ function parse_pollution(api::DataPipelineAPI; product="records/pollution", comp
 
     # Populate grid
     for (id, pop) in zip(cell_ids, eachcol(data.data))
-        pollution[grid_x = id[1] * m, grid_y = id[2] * m] = pop
+        pollution[grid_x = id[1] * m, grid_y = id[2] * m] = pop .* µg*m^-3
     end
-
     return pollution
 end
