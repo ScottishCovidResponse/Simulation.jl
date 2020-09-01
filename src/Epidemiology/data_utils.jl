@@ -91,7 +91,7 @@ Parse HDF5-format file of Scottish Population sizes at `product`, containing `co
 function parse_pollution(api::DataPipelineAPI; product="records/pollution", component="array")
 
     data = read_array(api, product, component)
-
+    data.data[isnan.(data.data)] .= 0.0
     # Get rows and columns
     splitnames = map(x -> split(x, "-"), data.dimensions[1].names)
     cell_ids = map(splitnames) do sp
