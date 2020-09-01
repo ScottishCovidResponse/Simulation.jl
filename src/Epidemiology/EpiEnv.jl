@@ -21,17 +21,19 @@ abstract type AbstractEpiEnv{H <: AbstractHabitat, C <: AbstractControl} <:
 This epi environment type holds a habitat and control strategy, as well as a string of
 subcommunity names, and initial susceptible population.
 """
-mutable struct GridEpiEnv{H, C, A} <: AbstractEpiEnv{H, C}
+mutable struct GridEpiEnv{H, C, A, P} <: AbstractEpiEnv{H, C}
     habitat::H
     active::A
     control::C
+    pollution::P
     names::Vector{String}
     function (::Type{GridEpiEnv{H, C}})(
         habitat::H,
         active::A,
         control::C,
+        pollution::P,
         names::Vector{String}=map(x -> "$x", 1:countsubcommunities(habitat))
-    ) where {H, C, A <: AbstractMatrix{Bool}}
+    ) where {H, C, A <: AbstractMatrix{Bool}, P <: AbstractPollution}
         countsubcommunities(habitat) == length(names) ||
             error("Number of subcommunities must match subcommunity names")
         if (size(habitat.matrix, 1), size(habitat.matrix, 2)) != size(active)
@@ -40,7 +42,7 @@ mutable struct GridEpiEnv{H, C, A} <: AbstractEpiEnv{H, C}
                 "size(active)=$(size(active))"
             ))
         end
-        return new{H, C, A}(habitat, active, control, names)
+        return new{H, C, A, P}(habitat, active, control, pollution, names)
     end
 end
 
@@ -51,6 +53,10 @@ end
 import Diversity.API: _getsubcommunitynames
 function _getsubcommunitynames(epienv::GridEpiEnv)
     return epienv.names
+end
+
+function get_pollution(epienv::GridEpiEnv, j::Int64)
+    return _get_pollution(epienv.pollution, j)
 end
 
 """
@@ -76,7 +82,8 @@ function simplehabitatAE(
     area::Unitful.Area{Float64},
     active::M,
     control::C,
-) where {C <: AbstractControl, M <: AbstractMatrix{Bool}}
+    pollution::P,
+) where {C <: AbstractControl, M <: AbstractMatrix{Bool}, P <: AbstractPollution}
     if typeof(val) <: Unitful.Temperature
         val = uconvert(K, val)
     end
@@ -89,17 +96,17 @@ function simplehabitatAE(
     dimension = size(active)
 
     hab = simplehabitat(val, gridsquaresize, dimension)
-    return GridEpiEnv{typeof(hab), typeof(control)}(hab, active, control)
+    return GridEpiEnv{typeof(hab), typeof(control)}(hab, active, control, pollution)
 end
 
 function simplehabitatAE(
     val::Union{Float64, Unitful.Quantity{Float64}},
     dimension::Tuple{Int64, Int64},
     area::Unitful.Area{Float64},
-    control::C,
+    control::C; pollution = NoPollution(),
 ) where C <: AbstractControl
     active = fill(true, dimension)
-    return simplehabitatAE(val, dimension, area, active, control)
+    return simplehabitatAE(val, dimension, area, active, control, pollution)
 end
 
 """
@@ -126,7 +133,8 @@ function ukclimateAE(
     area::Unitful.Area{Float64},
     active::AbstractMatrix{Bool},
     control::C,
-) where C <: AbstractControl
+    pollution::P,
+) where {C <: AbstractControl, P <: AbstractPollution}
     if typeof(first(climatearray)) <: Unitful.Temperature
         climatearray .= uconvert.(K, climatearray)
     end
@@ -139,15 +147,15 @@ function ukclimateAE(
     active = _shrink_to_active(active, active)
 
     hab = ContinuousTimeHab(climatearray, 1, gridsquaresize, HabitatUpdate(ukChange, 0.0/s, Unitful.Dimensions{()}))
-    return GridEpiEnv{typeof(hab), typeof(control)}(hab, active, control)
+    return GridEpiEnv{typeof(hab), typeof(control)}(hab, active, control, pollution)
 end
 
 function ukclimateAE(
     climatearray::AxisArray,
     area::Unitful.Area{Float64},
-    control::C,
+    control::C; pollution = NoPollution(),
 ) where C <: AbstractControl
     dimension = (size(climatearray, 1), size(climatearray, 2))
     active = fill(true, dimension)
-    return ukclimateAE(climatearray, dimension, area, active, control)
+    return ukclimateAE(climatearray, dimension, area, active, control, pollution)
 end

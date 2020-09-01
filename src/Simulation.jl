@@ -118,6 +118,9 @@ export NoControl, Lockdown
 include("Epidemiology/shrink.jl")
 export shrink_to_active, convert_population
 
+include("Epidemiology/Pollution.jl")
+export NoPollution, GriddedPollution
+
 include("Epidemiology/EpiEnv.jl")
 export GridEpiEnv, simplehabitatAE, ukclimateAE
 
