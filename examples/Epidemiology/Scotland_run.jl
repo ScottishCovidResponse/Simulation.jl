@@ -160,7 +160,7 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
 
     initial_infecteds = 100
     # Create epi system with all information
-    @time epi = EpiSystem(epilist, epienv, rel, total_pop, UInt32(1), initial_infected = initial_infecteds)
+    @time epi = EpiSystem(epilist, epienv, rel, total_pop, Int64(1), initial_infected = initial_infecteds)
 
     # Populate susceptibles according to actual population spread
     cat_idx = reshape(1:(numclasses * age_categories), age_categories, numclasses)
@@ -201,9 +201,9 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     return abuns
 end
 
-config = "data_config.yaml"
+config = "./examples/Epidemiology/data_config.yaml"
 download_data_registry(config)
 times = 2months; interval = 1day; timestep = 1day
 abuns = StandardAPI(config, "test_uri", "test_git_sha") do api
-    run_model(api, times, interval, timestep)
+    run_model(api, times, interval, timestep, do_plot=false)
 end;

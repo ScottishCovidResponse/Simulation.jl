@@ -1,3 +1,9 @@
+# Simulation.jl #
+#################
+
+access*.yaml
+examples/Epidemiology/data/simulation-outputs/*.h5
+
 # Julia #
 #########
 

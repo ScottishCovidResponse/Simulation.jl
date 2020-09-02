@@ -1,0 +1,8 @@
+- accessibility: 0
+  component: asymptomatic-period
+  data_product: human/infection/SARS-CoV-2/asymptomatic-period
+  extension: toml
+  filename: human/infection/SARS-CoV-2/asymptomatic-period/0.1.0/0.1.0.toml
+  namespace: SCRC
+  verified_hash: 8142974eaf721e6606830b36ffac3c3a00337a77
+  version: 0.1.0
