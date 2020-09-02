@@ -12,11 +12,14 @@ using Random
 using DataFrames
 using Plots
 
-function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.Time, timestep::Unitful.Time; do_plot::Bool = false, do_download::Bool = true, save::Bool = false, savepath::String = pwd())
+const stochasticmode = false
+const seed = hash(time()) # seed used for Random.jl and therefore rngs used in Simulation.jl
+
+Random.seed!(seed)
+
+function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.Time, timestep::Unitful.Time; do_plot::Bool = false, do_download::Bool = true, save::Bool = false, savepath::String = pwd(), include_pollution = true)
     # Download and read in population sizes for Scotland
     scotpop = parse_scottish_population(api)
-    pollution = parse_pollution(api)
-    pollution = pollution[5513m .. 470513m, 531500m .. 1221500m, :]
 
     # Read number of age categories
     age_categories = size(scotpop, 3)
@@ -78,7 +81,11 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     @assert length(p_s) == length(p_h) == length(cfr_home)
 
     # Time exposed
-    T_lat = 3days
+    T_lat = days(read_estimate(
+        api,
+        "human/infection/SARS-CoV-2/latent-period",
+        "latent-period"
+    )Unitful.hr)
 
     # Time asymptomatic
     T_asym = days(read_estimate(
@@ -151,9 +158,15 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     beta_env = fill(10.0/day, age_categories)
     age_mixing = fill(1.0, age_categories, age_categories)
 
-    param = (birth = birth_rates, death = death_rates, virus_growth = [virus_growth_asymp virus_growth_presymp virus_growth_symp], virus_decay = virus_decay, beta_force = beta_force, beta_env = beta_env, age_mixing = age_mixing, pollution_infectivity = 0.17/(μg * m^-3))
-
-    epienv = simplehabitatAE(298.0K, size(total_pop), area, Lockdown(20days), pollution = GriddedPollution(pollution[pollutant = "pm2-5"]))
+    if include_pollution
+        pollution = parse_pollution(api)
+        pollution = pollution[5513m .. 470513m, 531500m .. 1221500m, :]
+        epienv = simplehabitatAE(298.0K, size(total_pop), area, Lockdown(20days), pollution = GriddedPollution(pollution[pollutant = "pm2-5"]))
+        param = (birth = birth_rates, death = death_rates, virus_growth = [virus_growth_asymp virus_growth_presymp virus_growth_symp], virus_decay = virus_decay, beta_force = beta_force, beta_env = beta_env, age_mixing = age_mixing, pollution_infectivity = 0.17/(μg * m^-3))
+    else
+        epienv = simplehabitatAE(298.0K, size(total_pop), area, Lockdown(20days), pollution = NoPollution())
+        param = (birth = birth_rates, death = death_rates, virus_growth = [virus_growth_asymp virus_growth_presymp virus_growth_symp], virus_decay = virus_decay, beta_force = beta_force, beta_env = beta_env, age_mixing = age_mixing)
+    end
 
     movement_balance = (home = fill(0.5, numclasses * age_categories), work = fill(0.5, numclasses * age_categories))
 
@@ -177,9 +190,12 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     epilist = EpiList(traits, abun_v, abun_h, movement, transitions, param, age_categories, movement_balance)
     rel = Gauss{eltype(epienv.habitat)}()
 
+    # multiple dispatch in action
+    rngtype = stochasticmode ? Random.MersenneTwister : MedianGenerator
+
     initial_infecteds = 100
     # Create epi system with all information
-    @time epi = EpiSystem(epilist, epienv, rel, total_pop, UInt32(1), initial_infected = initial_infecteds)
+    @time epi = EpiSystem(epilist, epienv, rel, total_pop, UInt32(1), initial_infected = initial_infecteds, rngtype = rngtype)
 
     # Populate susceptibles according to actual population spread
     cat_idx = reshape(1:(numclasses * age_categories), age_categories, numclasses)
@@ -224,6 +240,29 @@ config = "data_config.yaml"
 download_data_registry(config)
 
 times = 2months; interval = 1day; timestep = 1day
-abuns = StandardAPI(config, "test_uri", "test_git_sha") do api
+
+# Pollution run
+abuns_pollution = StandardAPI(config, "test_uri", "test_git_sha") do api
     run_model(api, times, interval, timestep)
 end;
+
+# Normal run
+abuns_normal = StandardAPI(config, "test_uri", "test_git_sha") do api
+    run_model(api, times, interval, timestep, include_pollution = false)
+end;
+
+numclasses = 8
+age_categories = 10
+cat_idx = reshape(1:(numclasses * age_categories), age_categories, numclasses)
+category_map = (
+    "Susceptible" => cat_idx[:, 1],
+    "Exposed" => cat_idx[:, 2],
+    "Asymptomatic" => cat_idx[:, 3],
+    "Presymptomatic" => cat_idx[:, 4],
+    "Symptomatic" => cat_idx[:, 5],
+    "Hospital" => cat_idx[:, 6],
+    "Recovered" => cat_idx[:, 7],
+    "Deaths" => cat_idx[:, 8],
+)
+display(plot_epidynamics(epi, abuns, category_map = category_map))
+display(plot_epiheatmaps(epi, abuns, steps = [30]))
