@@ -45,6 +45,13 @@ function shrink_to_active(M::AM) where {AM <: AbstractMatrix}
     return shrink_to_active(M, active)
 end
 
+function shrink_to_active(M::AM, dims::Int64) where {AM <: AbstractArray}
+    summed = Float64.(dropdims(sum(M, dims = dims), dims = dims))
+    summed[summed .== 0.0] .= NaN
+    active = .!_inactive.(summed)
+    return _shrink_to_active(M, active)
+end
+
 _inactive(x) = ismissing(x) || isnan(x)
 
 """
@@ -72,11 +79,11 @@ function _construct_shrunk_matrix(M::AbstractMatrix, row_idxs, col_idxs)::AxisAr
      )
  end
 
-function _construct_shrunk_matrix(M::AxisArray{T, 3}, row_idxs, col_idxs)::AxisArray{T, 3} where T <: Unitful.Quantity
+function _construct_shrunk_matrix(M::AxisArray{T, 3}, row_idxs, col_idxs)::AxisArray{T, 3} where T
     return M[row_idxs, col_idxs, :]
 end
 
-function _construct_shrunk_matrix(M::AxisArray, row_idxs, col_idxs)::AxisArray
+function _construct_shrunk_matrix(M::AxisArray{T, 2}, row_idxs, col_idxs)::AxisArray{T, 2} where T
     return M[row_idxs, col_idxs]
  end
 

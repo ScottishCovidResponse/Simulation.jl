@@ -4,7 +4,7 @@ abstract type AbstractPollution end
 mutable struct NoPollution <: AbstractPollution end
 
 function _get_pollution(pol::NoPollution, j::Int64)
-    return 1.0
+    return 1.0 * μg * m^-3
 end
 
 mutable struct GriddedPollution <: AbstractPollution

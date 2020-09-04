@@ -85,19 +85,22 @@ function EpiSystem(epilist::EpiList, epienv::GridEpiEnv, rel::AbstractTraitRelat
         initial_population::A, intnum::U = Int64(1); initial_infected = 0,
         rngtype::Type{R} = Random.MersenneTwister
         ) where {U <: Integer, A <: AbstractArray, R <: Random.AbstractRNG}
-    if size(initial_population) != size(epienv.active)
+    if size(initial_population) != (length(epilist.human.susceptible), size(epienv.active)...)
         msg = "size(initial_population)==$(size(initial_population)) != " *
-            "size(epienv.active)==$(size(epienv.active))"
+            "true size ==$((length(epilist.human.susceptible), size(epienv.active)...))"
         throw(DimensionMismatch(msg))
     end
-    epienv.active .&= .!_inactive.(initial_population)
+    summed = dropdims(sum(Float64.(initial_population), dims = 1), dims = 1)
+    summed[summed .== 0.0] .= NaN
+    epienv.active .&= .!_inactive.(summed)
 
     # Create matrix landscape of zero abundances
     ml = emptyepilandscape(epienv, epilist, intnum, rngtype)
 
     # Create lookup table of all moves and their probabilities
+    summed = dropdims(sum(Float64.(initial_population), dims = 1), dims = 1)
     home_lookup = genlookups(epienv, epilist.human.movement.home)
-    work_lookup = genlookups(epienv, epilist.human.movement.work, initial_population[1:end])
+    work_lookup = genlookups(epienv, epilist.human.movement.work, summed[1:end])
     lookup = EpiLookup(home_lookup, work_lookup)
 
     vm = zeros(Float64, size(ml.matrix))
@@ -106,11 +109,7 @@ function EpiSystem(epilist::EpiList, epienv::GridEpiEnv, rel::AbstractTraitRelat
 
     # Add in the initial susceptible population
     # TODO Need to fix code so it doesn't rely on name of susceptible class
-    idx = findfirst(occursin.("Susceptible", epilist.human.names))
-    if idx == nothing
-        msg = "epilist has no Susceptible category. epilist.names = $(epilist.human.names)"
-        throw(ArgumentError(msg))
-    end
+    idx = epi.epilist.human.susceptible
     # Modify active cells based on new population
     initial_population = convert_population(initial_population, intnum)
     epi.abundances.grid[idx, :, :] .+= initial_population

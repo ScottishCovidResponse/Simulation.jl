@@ -195,14 +195,11 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
 
     initial_infecteds = 100
     # Create epi system with all information
-    @time epi = EpiSystem(epilist, epienv, rel, total_pop, UInt32(1), initial_infected = initial_infecteds, rngtype = rngtype)
+    scotpop = shrink_to_active(scotpop, 3)
+    @time epi = EpiSystem(epilist, epienv, rel, permutedims(scotpop, (:age, :grid_x, :grid_y)), UInt32(1), initial_infected = initial_infecteds, rngtype = rngtype)
 
     # Populate susceptibles according to actual population spread
     cat_idx = reshape(1:(numclasses * age_categories), age_categories, numclasses)
-    reshaped_pop =
-        reshape(scotpop[1:size(epienv.active, 1), 1:size(epienv.active, 2), :],
-                size(epienv.active, 1) * size(epienv.active, 2), size(scotpop, 3))'
-    epi.abundances.matrix[cat_idx[:, 1], :] = reshaped_pop
     N_cells = size(epi.abundances.matrix, 2)
 
     # Turn off work moves for <20s and >70s
