@@ -33,16 +33,13 @@ function seedinfected!(epi::EpiSystem, controls::Lockdown, timestep::Unitful.Tim
     rng = epi.abundances.rngs[Threads.threadid()]
     if (epi.initial_infected > 0) && (controls.current_date < controls.lockdown_date)
         inf = rand(rng, Poisson(epi.initial_infected * timestep /controls.lockdown_date))
-        sus_id = sample(epi.epilist.human.susceptible, inf)
-        exp_id = sus_id .+ length(epi.epilist.human.susceptible)
-        summed_exp = sum(human(epi.abundances)[exp_id, :], dims = 1)[1, :]
-        pos = sample(rng, epi.ordered_active, weights(summed_exp[epi.ordered_active]), inf)
-        for i in 1:inf
-            if (human(epi.abundances)[sus_id[i], pos[i]] > 0)
-                human(epi.abundances)[sus_id[i], pos[i]] -= 1
-                human(epi.abundances)[exp_id[i], pos[i]] += 1
-            end
-        end
+        sus_ids = epi.epilist.human.susceptible
+        exp_ids = sus_ids .+ maximum(sus_ids)
+        w = weights(@view human(epi.abundances)[sus_ids, epi.ordered_active])
+        pos = rand(rng, Multinomial(inf, w/sum(w)))
+        human(epi.abundances)[sus_ids, epi.ordered_active] .-= reshape(pos, length(sus_ids), length(epi.ordered_active))
+        human(epi.abundances)[exp_ids, epi.ordered_active] .+= reshape(pos, length(sus_ids), length(epi.ordered_active))
+        human(epi.abundances)[human(epi.abundances) .< 0] .= 0
     elseif controls.current_date == controls.lockdown_date
         @info "Lockdown initiated - $(sum(human(epi.abundances)[epi.epilist.human.susceptible .+ length(epi.epilist.human.susceptible), :])) individuals infected"
     end
@@ -206,7 +203,7 @@ function classupdate!(epi::EpiSystem, timestep::Unitful.Time)
                     (N^params.freq_vs_density_env)
 
                 # Direct transmission infection rate from k to i
-                force_inf = pol * params.pollution_infectivity * (params.age_mixing[k_age_cat, :] ⋅
+                force_inf =  max(1.0, pol * params.pollution_infectivity) * (params.age_mixing[k_age_cat, :] ⋅
                              virus(epi.abundances)[force_cats, j]) /
                     (N^params.freq_vs_density_force)
 
