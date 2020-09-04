@@ -162,7 +162,7 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
         pollution = parse_pollution(api)
         pollution = pollution[5513m .. 470513m, 531500m .. 1221500m, :]
         epienv = simplehabitatAE(298.0K, size(total_pop), area, Lockdown(20days), pollution = GriddedPollution(pollution[pollutant = "pm2-5"]))
-        param = (birth = birth_rates, death = death_rates, virus_growth = [virus_growth_asymp virus_growth_presymp virus_growth_symp], virus_decay = virus_decay, beta_force = beta_force, beta_env = beta_env, age_mixing = age_mixing, pollution_infectivity = 0.17/(μg * m^-3))
+        param = (birth = birth_rates, death = death_rates, virus_growth = [virus_growth_asymp virus_growth_presymp virus_growth_symp], virus_decay = virus_decay, beta_force = beta_force, beta_env = beta_env, age_mixing = age_mixing, pollution_infectivity = 1.17/(μg * m^-3))
     else
         epienv = simplehabitatAE(298.0K, size(total_pop), area, Lockdown(20days), pollution = NoPollution())
         param = (birth = birth_rates, death = death_rates, virus_growth = [virus_growth_asymp virus_growth_presymp virus_growth_symp], virus_decay = virus_decay, beta_force = beta_force, beta_env = beta_env, age_mixing = age_mixing)
@@ -261,5 +261,7 @@ category_map = (
     "Recovered" => cat_idx[:, 7],
     "Deaths" => cat_idx[:, 8],
 )
-display(plot_epidynamics(epi, abuns, category_map = category_map))
-display(plot_epiheatmaps(epi, abuns, steps = [30]))
+display(plot_epidynamics(epi, abuns_pollution, category_map = category_map))
+display(plot_epidynamics(epi, abuns_normal, category_map = category_map))
+
+display(plot_epiheatmaps(epi, abuns_pollution, steps = [30]))
