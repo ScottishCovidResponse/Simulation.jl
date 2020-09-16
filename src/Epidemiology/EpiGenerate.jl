@@ -35,10 +35,10 @@ function seedinfected!(epi::EpiSystem, controls::Lockdown, timestep::Unitful.Tim
         inf = rand(rng, Poisson(epi.initial_infected * timestep /controls.lockdown_date))
         sus_ids = epi.epilist.human.susceptible
         exp_ids = sus_ids .+ maximum(sus_ids)
-        w = weights(@view human(epi.abundances)[sus_ids, epi.ordered_active])
+        w = weights(@view human(epi.abundances)[sus_ids, epi.ordered_active[1:epi.initial_infected]])
         pos = rand(rng, Multinomial(inf, w/sum(w)))
-        human(epi.abundances)[sus_ids, epi.ordered_active] .-= reshape(pos, length(sus_ids), length(epi.ordered_active))
-        human(epi.abundances)[exp_ids, epi.ordered_active] .+= reshape(pos, length(sus_ids), length(epi.ordered_active))
+        human(epi.abundances)[sus_ids, epi.ordered_active[1:epi.initial_infected]] .-= reshape(pos, length(sus_ids), length(epi.ordered_active[1:epi.initial_infected]))
+        human(epi.abundances)[exp_ids, epi.ordered_active[1:epi.initial_infected]] .+= reshape(pos, length(sus_ids), length(epi.ordered_active[1:epi.initial_infected]))
         human(epi.abundances)[human(epi.abundances) .< 0] .= 0
     elseif controls.current_date == controls.lockdown_date
         @info "Lockdown initiated - $(sum(human(epi.abundances)[epi.epilist.human.susceptible .+ length(epi.epilist.human.susceptible), :])) individuals infected"
