@@ -152,17 +152,19 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     death_rates = fill(0.0/day, numclasses, age_categories)
     birth_rates[:, 2:4] .= uconvert(day^-1, 1/20years)
     death_rates[1:end-1, :] .= uconvert(day^-1, 1/100years)
-    virus_growth_asymp = virus_growth_presymp = virus_growth_symp = fill(0.1/day, age_categories)
-    virus_decay = 1.0/day
-    beta_force = fill(10.0/day, age_categories)
-    beta_env = fill(10.0/day, age_categories)
+    virus_growth_asymp = fill(0.1/day, age_categories)
+    virus_growth_presymp = fill(0.5/day, age_categories)
+    virus_growth_symp = fill(1.0/day, age_categories)
+    virus_decay = 1.0/3days
+    beta_force = fill(2.0/day, age_categories)
+    beta_env = fill(1.0/day, age_categories)
     age_mixing = fill(1.0, age_categories, age_categories)
 
     if include_pollution
         pollution = parse_pollution(api)
         pollution = pollution[5513m .. 470513m, 531500m .. 1221500m, :]
         epienv = simplehabitatAE(298.0K, size(total_pop), area, Lockdown(20days), pollution = GriddedPollution(pollution[pollutant = "pm2-5"]))
-        param = (birth = birth_rates, death = death_rates, virus_growth = [virus_growth_asymp virus_growth_presymp virus_growth_symp], virus_decay = virus_decay, beta_force = beta_force, beta_env = beta_env, age_mixing = age_mixing, pollution_infectivity = 1.17/(μg * m^-3))
+        param = (birth = birth_rates, death = death_rates, virus_growth = [virus_growth_asymp virus_growth_presymp virus_growth_symp], virus_decay = virus_decay, beta_force = beta_force, beta_env = beta_env, age_mixing = age_mixing, pollution_infectivity = 1.1/(μg * m^-3))
     else
         epienv = simplehabitatAE(298.0K, size(total_pop), area, Lockdown(20days), pollution = NoPollution())
         param = (birth = birth_rates, death = death_rates, virus_growth = [virus_growth_asymp virus_growth_presymp virus_growth_symp], virus_decay = virus_decay, beta_force = beta_force, beta_env = beta_env, age_mixing = age_mixing)
@@ -234,7 +236,7 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
 end
 
 config = "data_config.yaml"
-download_data_registry(config)
+# download_data_registry(config)
 
 times = 2months; interval = 1day; timestep = 1day
 
@@ -261,7 +263,7 @@ category_map = (
     "Recovered" => cat_idx[:, 7],
     "Deaths" => cat_idx[:, 8],
 )
-display(plot_epidynamics(epi, abuns_pollution, category_map = category_map))
-display(plot_epidynamics(epi, abuns_normal, category_map = category_map))
+display(plot_epidynamics(epi, abuns_pollution, category_map = category_map, layout = 2, subplot = 1, title = "Pollution", size = (1200, 800), legend = false))
+display(plot_epidynamics!(epi, abuns_normal, category_map = category_map, subplot = 2, title = "No pollution"))
 
 display(plot_epiheatmaps(epi, abuns_pollution, steps = [30]))
