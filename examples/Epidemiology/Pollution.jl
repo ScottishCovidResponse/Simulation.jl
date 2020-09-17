@@ -56,6 +56,12 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     total_pop = AxisArray(total_pop, AxisArrays.axes(scotpop)[1], AxisArrays.axes(scotpop)[2])
     total_pop.data[total_pop .≈ 0.0] .= NaN
     # Shrink to smallest bounding box. The NaNs are inactive.
+
+    pollution = parse_pollution(api)
+    pollution = pollution[5513m .. 470513m, 531500m .. 1221500m, :]
+    pm2_5 = GriddedPollution(pollution[pollutant = "pm2-5"])
+    pm2_5.matrix = shrink_to_active(pm2_5.matrix, .!isnan.(total_pop))
+
     total_pop = shrink_to_active(total_pop);
 
     # Prob of developing symptoms
@@ -159,15 +165,13 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     beta_force = fill(2.0/day, age_categories)
     beta_env = fill(1.0/day, age_categories)
     age_mixing = fill(1.0, age_categories, age_categories)
+    param = (birth = birth_rates, death = death_rates, virus_growth = [virus_growth_asymp virus_growth_presymp virus_growth_symp], virus_decay = virus_decay, beta_force = beta_force, beta_env = beta_env, age_mixing = age_mixing)
 
     if include_pollution
-        pollution = parse_pollution(api)
-        pollution = pollution[5513m .. 470513m, 531500m .. 1221500m, :]
-        epienv = simplehabitatAE(298.0K, size(total_pop), area, Lockdown(20days), pollution = GriddedPollution(pollution[pollutant = "pm2-5"]))
-        param = (birth = birth_rates, death = death_rates, virus_growth = [virus_growth_asymp virus_growth_presymp virus_growth_symp], virus_decay = virus_decay, beta_force = beta_force, beta_env = beta_env, age_mixing = age_mixing, pollution_infectivity = 1.1/(μg * m^-3))
+        epienv = simplehabitatAE(298.0K, size(total_pop), area, Lockdown(20days), pollution = pm2_5)
+        param = (; param..., pollution_infectivity = 1.1/(μg * m^-3))
     else
         epienv = simplehabitatAE(298.0K, size(total_pop), area, Lockdown(20days), pollution = NoPollution())
-        param = (birth = birth_rates, death = death_rates, virus_growth = [virus_growth_asymp virus_growth_presymp virus_growth_symp], virus_decay = virus_decay, beta_force = beta_force, beta_env = beta_env, age_mixing = age_mixing)
     end
 
     movement_balance = (home = fill(0.5, numclasses * age_categories), work = fill(0.5, numclasses * age_categories))
@@ -263,7 +267,11 @@ category_map = (
     "Recovered" => cat_idx[:, 7],
     "Deaths" => cat_idx[:, 8],
 )
-display(plot_epidynamics(epi, abuns_pollution, category_map = category_map, layout = 2, subplot = 1, title = "Pollution", size = (1200, 800), legend = false))
-display(plot_epidynamics!(epi, abuns_normal, category_map = category_map, subplot = 2, title = "No pollution"))
+display(plot_epidynamics(epi, abuns_pollution, category_map = category_map, layout = (@layout [a{0.4w} b{0.6w}]), subplot = 1, title = "Pollution", size = (1200, 800), legend = false, margin = 10*Plots.mm))
+display(plot_epidynamics!(epi, abuns_normal, category_map = category_map, subplot = 2, title = "No pollution", legend = :outerright, right_margin = 15 * Plots.mm, legendtitlefonthalign = :left))
+
+cum_inf = sum(Int64, abuns_pollution[cat_idx[:, 2], :, :], dims = (1, 3))[1, :, 1]
+poll = ustrip.(epi.epienv.pollution.matrix[1:end])
+display(scatter(poll, cum_inf, xlab = "Pollution (\\mu g m^{-3})", ylab = "Number exposed", legend = false, zcolor = poll, mc = :default_r, msc = :white, ma = 0.8, size = (1000, 800), margin = 10*Plots.mm))
 
 display(plot_epiheatmaps(epi, abuns_pollution, steps = [30]))
