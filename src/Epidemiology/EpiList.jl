@@ -36,19 +36,20 @@ mutable struct HumanTypes{MO <: AbstractMovement,
   home_balance::Vector{Float64}
   work_balance::Vector{Float64}
   susceptible::Vector{Int64}
+  exposed::Vector{Int64}
   infectious::Vector{Int64}
   human_to_force::Vector{Int64}
 
-  function HumanTypes{MO, T}(names:: Vector{String}, abun::Vector{Int64}, types::T, movement::MO, home_balance::Vector{Float64}, work_balance::Vector{Float64}, susceptible::Vector{Int64}, infectious::Vector{Int64}, human_to_force::Vector{Int64}) where {
+  function HumanTypes{MO, T}(names::Vector{String}, abun::Vector{Int64}, types::T, movement::MO, home_balance::Vector{Float64}, work_balance::Vector{Float64}, susceptible::Vector{Int64}, exposed::Vector{Int64}, infectious::Vector{Int64}, human_to_force::Vector{Int64}) where {
                        MO <: AbstractMovement,
                        T <: AbstractTypes}
-      new{MO, T}(names, abun, types, movement, home_balance, work_balance, susceptible, infectious, human_to_force)
+      new{MO, T}(names, abun, types, movement, home_balance, work_balance, susceptible, exposed, infectious, human_to_force)
   end
-  function HumanTypes{MO, T}(abun::Vector{Int64}, types::T, movement::MO, home_balance::Vector{Float64}, work_balance::Vector{Float64}, susceptible::Vector{Int64}, infectious::Vector{Int64}, human_to_force::Vector{Int64}) where {
+  function HumanTypes{MO, T}(abun::Vector{Int64}, types::T, movement::MO, home_balance::Vector{Float64}, work_balance::Vector{Float64}, susceptible::Vector{Int64}, exposed::Vector{Int64}, infectious::Vector{Int64}, human_to_force::Vector{Int64}) where {
                        MO <: AbstractMovement,
                        T <: AbstractTypes}
       names = map(x -> "$x", 1:length(abun))
-      new{MO, T}(names, abun, types, movement, home_balance, work_balance, susceptible, infectious, human_to_force)
+      new{MO, T}(names, abun, types, movement, home_balance, work_balance, susceptible, exposed, infectious, human_to_force)
   end
 end
 
@@ -120,12 +121,16 @@ function EpiList(traits::TR, virus_abun::DataFrame, human_abun::DataFrame,
         error("No Susceptible disease states")
     # Find correct indices in arrays
     row_sus = findall(==(Susceptible), human_abun.type)
+    row_exp = findall(==(Exposed), human_abun.type)
     row_inf = findall(==(Infectious), human_abun.type)
 
     true_indices = [0; cumsum(length.(human_abun.initial))]
     idx_sus = vcat([(true_indices[r]+1):true_indices[r+1] for r in row_sus]...)
+    idx_exp = vcat([(true_indices[r]+1):true_indices[r+1] for r in row_exp]...)
     idx_inf = vcat([(true_indices[r]+1):true_indices[r+1] for r in row_inf]...)
     length(idx_sus) == length(row_sus) * age_categories ||
+        throw(DimensionMismatch("# susceptible categories is incorrect"))
+    length(idx_exp) == length(row_exp) * age_categories ||
         throw(DimensionMismatch("# susceptible categories is incorrect"))
     length(idx_inf) == length(row_inf) * age_categories ||
         throw(DimensionMismatch("# infectious categories is incorrect"))
@@ -142,7 +147,7 @@ function EpiList(traits::TR, virus_abun::DataFrame, human_abun::DataFrame,
     counttypes(ht) == nrow(human_abun) * age_categories ||
         throw(DimensionMismatch("# categories is inconsistent"))
     human_to_force = repeat(1:age_categories, nrow(human_abun))
-    human = HumanTypes{typeof(movement), typeof(ht)}(h_names, Int64.(abuns), ht, movement,  movement_balance.home, movement_balance.work, idx_sus, idx_inf, human_to_force)
+    human = HumanTypes{typeof(movement), typeof(ht)}(h_names, Int64.(abuns), ht, movement,  movement_balance.home, movement_balance.work, idx_sus, idx_exp, idx_inf, human_to_force)
 
     virus_names = virus_abun.name
     vabuns = vcat(virus_abun.initial...)

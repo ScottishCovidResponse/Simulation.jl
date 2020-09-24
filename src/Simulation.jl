@@ -25,8 +25,8 @@ end
 
     Disease state of a group, from: Susceptible Infectious Removed OtherDiseaseState
 """
-@enum DiseaseState Susceptible Infectious Removed OtherDiseaseState
-export Susceptible, Infectious, Removed, OtherDiseaseState
+@enum DiseaseState Susceptible Exposed Infectious Removed OtherDiseaseState
+export Susceptible, Exposed, Infectious, Removed, OtherDiseaseState
 
 include("Biodiversity/Dist.jl")
 export Trapezoid
@@ -137,7 +137,10 @@ include("Epidemiology/EpiLandscape.jl")
 export EpiLandscape, human, virus
 
 include("Epidemiology/EpiSystem.jl")
-export EpiSystem
+export EpiSystem, EpiSeedInf
+
+include("Epidemiology/EpiSeed.jl")
+export seedfile!, seedrandpop!, seednone!
 
 include("Epidemiology/EpiTraits.jl")
 
