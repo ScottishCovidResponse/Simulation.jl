@@ -29,7 +29,7 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     # Set population to initially have no individuals
     abun_h = DataFrame([
         (name="Susceptible", type=Susceptible, initial=fill(0, age_categories)),
-        (name="Exposed", type=OtherDiseaseState, initial=fill(0, age_categories)),
+        (name="Exposed", type=Exposed, initial=fill(0, age_categories)),
         (name="Asymptomatic", type=Infectious, initial=fill(0, age_categories)),
         (name="Presymptomatic", type=Infectious, initial=fill(0, age_categories)),
         (name="Symptomatic", type=Infectious, initial=fill(0, age_categories)),

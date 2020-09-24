@@ -11,13 +11,14 @@ using HTTP
 using Random
 using DataFrames
 using Plots
+using CSV
 
 const stochasticmode = false
 const seed = hash(time()) # seed used for Random.jl and therefore rngs used in Simulation.jl
 
 Random.seed!(seed)
 
-function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.Time, timestep::Unitful.Time; do_plot::Bool = false, do_download::Bool = true, save::Bool = false, savepath::String = pwd(), include_pollution = true)
+function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.Time, timestep::Unitful.Time, file::String; do_plot::Bool = false, do_download::Bool = true, save::Bool = false, savepath::String = pwd(), include_pollution = true)
     # Download and read in population sizes for Scotland
     scotpop = parse_scottish_population(api)
 
@@ -34,7 +35,7 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     # Set population to initially have no individuals
     abun_h = DataFrame([
         (name="Susceptible", type=Susceptible, initial=fill(0, age_categories)),
-        (name="Exposed", type=OtherDiseaseState, initial=fill(0, age_categories)),
+        (name="Exposed", type=Exposed, initial=fill(0, age_categories)),
         (name="Asymptomatic", type=Infectious, initial=fill(0, age_categories)),
         (name="Presymptomatic", type=Infectious, initial=fill(0, age_categories)),
         (name="Symptomatic", type=Infectious, initial=fill(0, age_categories)),
@@ -199,24 +200,33 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     # multiple dispatch in action
     rngtype = stochasticmode ? Random.MersenneTwister : MedianGenerator
 
+    ismissing(file) && error("No file supplied")
+    locs = Int64.(CSV.read(file)[!, :location])
     initial_infecteds = 100
-    # Create epi system with all information
+    seed_fun = seedfile!
+
     scotpop = shrink_to_active(scotpop, 3)
-    @time epi = EpiSystem(epilist, epienv, rel, permutedims(scotpop, (:age, :grid_x, :grid_y)), UInt32(1), initial_infected = initial_infecteds, rngtype = rngtype)
 
-    # Populate susceptibles according to actual population spread
-    cat_idx = reshape(1:(numclasses * age_categories), age_categories, numclasses)
-    N_cells = size(epi.abundances.matrix, 2)
+    for i in eachindex(locs)
+        seeding = Simulation.EpiSeedInf(initial_infecteds, [locs[i]], seed_fun)
 
-    # Turn off work moves for <20s and >70s
-    epi.epilist.human.home_balance[cat_idx[1:2, :]] .= 1.0
-    epi.epilist.human.home_balance[cat_idx[7:10, :]] .= 1.0
-    epi.epilist.human.work_balance[cat_idx[1:2, :]] .= 0.0
-    epi.epilist.human.work_balance[cat_idx[7:10, :]] .= 0.0
+        # Create epi system with all information
+        @time epi = EpiSystem(epilist, epienv, rel, permutedims(scotpop, (:age, :grid_x, :grid_y)), seeding, UInt32(1), rngtype = rngtype)
 
-    # Run simulation
-    abuns = zeros(UInt32, size(epi.abundances.matrix, 1), N_cells, floor(Int, times/timestep) + 1)
-    @time simulate_record!(abuns, epi, times, interval, timestep, save = save, save_path = savepath)
+        # Populate susceptibles according to actual population spread
+        cat_idx = reshape(1:(numclasses * age_categories), age_categories, numclasses)
+        N_cells = size(epi.abundances.matrix, 2)
+
+        # Turn off work moves for <20s and >70s
+        epi.epilist.human.home_balance[cat_idx[1:2, :]] .= 1.0
+        epi.epilist.human.home_balance[cat_idx[7:10, :]] .= 1.0
+        epi.epilist.human.work_balance[cat_idx[1:2, :]] .= 0.0
+        epi.epilist.human.work_balance[cat_idx[7:10, :]] .= 0.0
+
+        # Run simulation
+        abuns = zeros(UInt32, size(epi.abundances.matrix, 1), sum(epi.epienv.active), floor(Int, times/timestep) + 1)
+        @time simulate_record!(abuns, epi, times, interval, timestep, save = save, save_path = savepath)
+    end
 
     # Write to pipeline
     #write_array(api, "simulation-outputs", "final-abundances", DataPipelineArray(abuns))
@@ -242,16 +252,17 @@ end
 config = "data_config.yaml"
 # download_data_registry(config)
 
-times = 2months; interval = 1day; timestep = 1day
+times = 1months; interval = 1day; timestep = 1day
+file = "Top_100_locs.csv"
 
 # Pollution run
 abuns_pollution = StandardAPI(config, "test_uri", "test_git_sha") do api
-    run_model(api, times, interval, timestep)
+    run_model(api, times, interval, timestep, file, save = true)
 end;
 
 # Normal run
 abuns_normal = StandardAPI(config, "test_uri", "test_git_sha") do api
-    run_model(api, times, interval, timestep, include_pollution = false)
+    run_model(api, times, interval, timestep, file, include_pollution = false)
 end;
 
 numclasses = 8
@@ -267,11 +278,57 @@ category_map = (
     "Recovered" => cat_idx[:, 7],
     "Deaths" => cat_idx[:, 8],
 )
+
+# Compare epi dynamics
 display(plot_epidynamics(epi, abuns_pollution, category_map = category_map, layout = (@layout [a{0.4w} b{0.6w}]), subplot = 1, title = "Pollution", size = (1200, 800), legend = false, margin = 10*Plots.mm))
 display(plot_epidynamics!(epi, abuns_normal, category_map = category_map, subplot = 2, title = "No pollution", legend = :outerright, right_margin = 15 * Plots.mm, legendtitlefonthalign = :left))
 
-cum_inf = sum(Int64, abuns_pollution[cat_idx[:, 2], :, :], dims = (1, 3))[1, :, 1]
+# Plot proportion exposed against pollution
+cum_inf_poll = sum(Float64, abuns_pollution[cat_idx[:, 2], :, :], dims = 1)[1, :, :]
+for i in 1:size(cum_inf, 2)
+    cum_inf[:, i] ./= total_pop[1:end]
+end
+prop_inf = mean(cum_inf, dims = 2)[:, 1]
 poll = ustrip.(epi.epienv.pollution.matrix[1:end])
-display(scatter(poll, cum_inf, xlab = "Pollution (\\mu g m^{-3})", ylab = "Number exposed", legend = false, zcolor = poll, mc = :default_r, msc = :white, ma = 0.8, size = (1000, 800), margin = 10*Plots.mm))
+display(scatter(poll, prop_inf[1:end], xlab = "Pollution (\\mu g m^{-3})", ylab = "Proportion exposed", legend = false, zcolor = poll, mc = :default_r, msc = :white, ma = 0.8, size = (1000, 800), margin = 10*Plots.mm, ylim = (0, 1)))
+
+cum_inf_poll = sum(Float64, abuns_pollution[cat_idx[:, 2], :, :], dims = (1, 3))[1, :, 1]
+cum_inf = sum(Float64, abuns_normal[cat_idx[:, 2], :, :], dims = (1, 3))[1, :, 1]
+prop_inf = cum_inf_poll ./ (cum_inf .+ cum_inf_poll)
+poll = ustrip.(epi.epienv.pollution.matrix[1:end])
+display(scatter(poll, prop_inf, xlab = "Pollution (\\mu g m^{-3})", ylab = "Proportion exposed", legend = false, zcolor = poll, mc = :default_r, msc = :white, ma = 0.8, size = (1000, 800), margin = 10*Plots.mm))
+
+
+prop_inf1 = cum_inf[:, 10]
+prop_inf2 = cum_inf[:, 30]
+poll = ustrip.(epi.epienv.pollution.matrix[1:end])
+display(scatter(poll, prop_inf1, xlab = "Pollution (\\mu g m^{-3})", ylab = "Proportion exposed", legend = false, zcolor = poll, mc = :default_r, msc = :white, ma = 0.8, size = (1000, 800), margin = 10*Plots.mm, ylim = (0, 1), layout = 2, subplot = 1, title = "Day 10"))
+display(scatter!(poll, prop_inf2, xlab = "Pollution (\\mu g m^{-3})", ylab = "Proportion exposed", legend = false, zcolor = poll, mc = :default_r, msc = :white, ma = 0.8, size = (1000, 800), margin = 10*Plots.mm, ylim = (0, 1), subplot = 2, title = "Day 30"))
 
 display(plot_epiheatmaps(epi, abuns_pollution, steps = [30]))
+
+
+total_pop_mat = Matrix{Float64}(total_pop)
+total_pop_mat[isnan.(total_pop)] .= 0
+rank_pop = sortperm(Matrix{Int64}(total_pop_mat)[1:end], rev = true)
+rank_pop = rank_pop[(total_pop_mat[rank_pop] .> 0)]
+find_100 = rank_pop[abs.(total_pop_mat[rank_pop] .- 100) .< 20]
+histogram(poll[find_100], xlab = "Pollution (\\mu g m^{-3})", ylab = "Count", legend = false)
+
+using Diversity
+pop = map(1:10) do i
+    scotpop[:, :, i][find_100]
+end
+pop = Array(hcat(pop...)')
+rho_bars = norm_sub_rho(Metacommunity(pop), 1.0)
+max_rho = findmax(rho_bars[:diversity])[2]
+
+ranked_rep = map(1:length(find_100)) do i
+    norm_meta_rho(Metacommunity([pop[:, i] pop[:, max_rho]]), 1.0)[:diversity]
+end
+
+using CSV
+using DataFrames
+top_100 = find_100[sortperm(ranked_rep, rev = true)][1:100]
+top_100_dat = DataFrame(location = top_100)
+CSV.write("Top_100_locs.csv", top_100_dat)
