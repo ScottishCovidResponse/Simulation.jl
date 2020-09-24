@@ -8,8 +8,9 @@ Function to update disease and virus class abundances and environment for one ti
 """
 function update!(epi::EpiSystem, timestep::Unitful.Time)
 
+    seed! = epi.seeding.seed_fun
     # Seed initial infecteds
-    seedinfected!(epi, epi.epienv.control, timestep)
+    seed!(epi, epi.epienv.control, timestep)
 
     # Virus movement loop
     virusupdate!(epi, timestep)
@@ -25,26 +26,6 @@ function update!(epi::EpiSystem, timestep::Unitful.Time)
     applycontrols!(epi, timestep)
 end
 
-function seedinfected!(epi::EpiSystem, controls::NoControl, timestep::Unitful.Time)
-    return controls
-end
-
-function seedinfected!(epi::EpiSystem, controls::Lockdown, timestep::Unitful.Time)
-    rng = epi.abundances.rngs[Threads.threadid()]
-    if (epi.initial_infected > 0) && (controls.current_date < controls.lockdown_date)
-        inf = rand(rng, Poisson(epi.initial_infected * timestep /controls.lockdown_date))
-        sus_ids = epi.epilist.human.susceptible
-        exp_ids = sus_ids .+ maximum(sus_ids)
-        w = weights(@view human(epi.abundances)[sus_ids, epi.ordered_active[1:epi.initial_infected]])
-        pos = rand(rng, Multinomial(inf, w/sum(w)))
-        human(epi.abundances)[sus_ids, epi.ordered_active[1:epi.initial_infected]] .-= reshape(pos, length(sus_ids), length(epi.ordered_active[1:epi.initial_infected]))
-        human(epi.abundances)[exp_ids, epi.ordered_active[1:epi.initial_infected]] .+= reshape(pos, length(sus_ids), length(epi.ordered_active[1:epi.initial_infected]))
-        human(epi.abundances)[human(epi.abundances) .< 0] .= 0
-    elseif controls.current_date == controls.lockdown_date
-        @info "Lockdown initiated - $(sum(human(epi.abundances)[epi.epilist.human.susceptible .+ length(epi.epilist.human.susceptible), :])) individuals infected"
-    end
-    return controls
-end
 
 """
     virusupdate!(epi::EpiSystem, time::Unitful.Time)

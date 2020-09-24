@@ -28,6 +28,21 @@ struct EpiLookup
 end
 
 """
+    EpiSeedInf{F <: Function}
+
+EpiSeedInf holds information used to seed the system under `update!`. This includes a count of `initial_infected` and a function, `seed_fun`, describing how to distribute these infected individuals. An option argument, `file`, can be included to read the locations to populate from disk.
+"""
+mutable struct EpiSeedInf{F <: Function}
+    initial_infected::Int64
+    locs::Union{Missing, Vector{Int64}}
+    seed_fun::F
+end
+function EpiSeedInf(seed_fun::F, initial_infected::Int64=0, file::Union{Missing, Vector{Int64}} = missing) where F <: Function
+    return EpiSeedInf(initial_infected, file, seed_fun)
+end
+
+
+"""
     EpiSystem{EE <: AbstractEpiEnv, EL <: EpiList, ER <: AbstractRelationship} <: AbstractEpiSystem{EE, EL, ER}
 
 EpiSystem houses information on different disease classes, `epilist`, the environment, `epienv`, and their relationship to one another, `relationship`.
@@ -42,22 +57,22 @@ mutable struct EpiSystem{U <: Integer, VecRNGType <: AbstractVector{<:Random.Abs
   relationship::ER
   lookup::EpiLookup
   cache::EpiCache
-  initial_infected::Int64
+  seeding::EpiSeedInf
   ordered_active::Vector{Int64}
 end
 function EpiSystem(abundances::EpiLandscape{U, VecRNGType}, epilist::EL, epienv::EE,
     ordinariness::Union{Matrix{Float64}, Missing}, relationship::ER, lookup::EpiLookup,
-    cache::EpiCache, initial_infected::Int64
+    cache::EpiCache, seeding::EpiSeedInf
     ) where {U <: Integer, VecRNGType <: AbstractVector{<:Random.AbstractRNG},
     EE <: AbstractEpiEnv, EL <: EpiList, ER <: AbstractTraitRelationship}
   total_pop = sum(abundances.matrix, dims = 1)[1, :]
   sorted_grid_ids = sortperm(total_pop, rev = true)
   sorted_grid_ids = sorted_grid_ids[total_pop[sorted_grid_ids] .> 0]
-  return EpiSystem(abundances, epilist, epienv, ordinariness, relationship, lookup, cache, initial_infected, sorted_grid_ids)
+  return EpiSystem(abundances, epilist, epienv, ordinariness, relationship, lookup, cache, seeding, sorted_grid_ids)
 end
 
 function EpiSystem(popfun::F, epilist::EpiList, epienv::GridEpiEnv,
-      rel::AbstractTraitRelationship, intnum::U; initial_infected = 0,
+      rel::AbstractTraitRelationship, intnum::U; initial_infected = 0, seed_fun = seednone!,
       rngtype::Type{R} = Random.MersenneTwister
       ) where {F<:Function, U <: Integer, R <: Random.AbstractRNG}
 
@@ -72,17 +87,18 @@ function EpiSystem(popfun::F, epilist::EpiList, epienv::GridEpiEnv,
   work_lookup = genlookups(epienv, epilist.human.movement.work, initial_pop)
   lookup = EpiLookup(home_lookup, work_lookup)
   vm = zeros(Float64, size(ml.matrix))
+  seeding = EpiSeedInf(initial_infected, missing, seed_fun)
   return EpiSystem(ml, epilist, epienv, missing, rel, lookup, EpiCache(vm, false), initial_infected)
 end
 
 function EpiSystem(epilist::EpiList, epienv::GridEpiEnv, rel::AbstractTraitRelationship,
-        intnum::U = Int64(1); initial_infected = 0, rngtype::Type{R} = Random.MersenneTwister
+        intnum::U = Int64(1); initial_infected = 0, seed_fun = seednone!, rngtype::Type{R} = Random.MersenneTwister
         ) where {U <: Integer, R <: Random.AbstractRNG}
-    return EpiSystem(populate!, epilist, epienv, rel, intnum, initial_infected = initial_infected, rngtype = rngtype)
+    return EpiSystem(populate!, epilist, epienv, rel, intnum, initial_infected = initial_infected, seed_fun = seednone!, rngtype = rngtype)
 end
 
 function EpiSystem(epilist::EpiList, epienv::GridEpiEnv, rel::AbstractTraitRelationship,
-        initial_population::A, intnum::U = Int64(1); initial_infected = 0,
+        initial_population::A, seeding::EpiSeedInf, intnum::U = Int64(1);
         rngtype::Type{R} = Random.MersenneTwister
         ) where {U <: Integer, A <: AbstractArray, R <: Random.AbstractRNG}
     if size(initial_population) != (length(epilist.human.susceptible), size(epienv.active)...)
@@ -105,7 +121,7 @@ function EpiSystem(epilist::EpiList, epienv::GridEpiEnv, rel::AbstractTraitRelat
 
     vm = zeros(Float64, size(ml.matrix))
 
-    epi = EpiSystem(ml, epilist, epienv, missing, rel, lookup, EpiCache(vm, false), initial_infected)
+    epi = EpiSystem(ml, epilist, epienv, missing, rel, lookup, EpiCache(vm, false), seeding)
 
     # Add in the initial susceptible population
     # TODO Need to fix code so it doesn't rely on name of susceptible class
