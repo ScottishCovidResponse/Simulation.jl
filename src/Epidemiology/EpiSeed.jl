@@ -51,7 +51,6 @@ function seedfile!(epi::EpiSystem, controls::Lockdown, timestep::Unitful.Time)
                 end
             end
         end
-        println(sum(human(epi.abundances)[exp_ids, :]))
         # human(epi.abundances)[sus_ids, locs] .-= reshape(pos, length(sus_ids), length(locs))
         # human(epi.abundances)[exp_ids, locs] .+= reshape(pos, length(exp_ids), length(locs))
         # human(epi.abundances)[human(epi.abundances) .< 0] .= 0

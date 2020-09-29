@@ -88,7 +88,7 @@ function simulate_record!(
 
   record_seq = 0s:interval:times
   time_seq = 0s:timestep:times
-  storage[:, :, 1] = epi.abundances.matrix
+  storage[:, :, 1] = epi.abundances.matrix[:, epi.epienv.active[1:end]]
   counting = 1
 
   # - initialise and save the first timestep abuns/storage to HDF5
@@ -102,7 +102,7 @@ function simulate_record!(
   grid_id = vec(grid_id)
   axes = (;
       compartment = epi.epilist.human.names,
-      grid_id = grid_id,
+      grid_id = grid_id[epi.epienv.active[1:end]],
       times = string.(uconvert.(day, 1.0 .* record_seq))
   )
   if save
@@ -112,7 +112,7 @@ function simulate_record!(
           h5fn=joinpath(save_path, "abundances.h5")
       )
       update_output_abuns(
-          epi.abundances.matrix,
+          epi.abundances.matrix[:, epi.epienv.active[1:end]],
           counting;
           h5fn=joinpath(save_path, "abundances.h5")
       )
@@ -123,10 +123,10 @@ function simulate_record!(
     update!(epi, timestep);
     if time_seq[i] in record_seq
       counting = counting + 1
-      storage[:, :, counting] = epi.abundances.matrix
+      storage[:, :, counting] = epi.abundances.matrix[:, epi.epienv.active[1:end]]
       if save
           update_output_abuns(
-              epi.abundances.matrix,
+              epi.abundances.matrix[:, epi.epienv.active[1:end]],
               counting;
               h5fn=joinpath(save_path, "abundances.h5")
           )

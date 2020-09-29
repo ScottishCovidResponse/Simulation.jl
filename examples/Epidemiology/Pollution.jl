@@ -206,12 +206,12 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     seed_fun = seedfile!
 
     scotpop = shrink_to_active(scotpop, 3)
-
+    cum_inf = Vector{Vector{Float64}}(undef, length(locs))
     for i in eachindex(locs)
         seeding = Simulation.EpiSeedInf(initial_infecteds, [locs[i]], seed_fun)
 
         # Create epi system with all information
-        @time epi = EpiSystem(epilist, epienv, rel, permutedims(scotpop, (:age, :grid_x, :grid_y)), seeding, UInt32(1), rngtype = rngtype)
+        @time epi = EpiSystem(epilist, epienv, rel, permutedims(scotpop, (:age, :grid_x, :grid_y)), seeding, UInt16(1), rngtype = rngtype)
 
         # Populate susceptibles according to actual population spread
         cat_idx = reshape(1:(numclasses * age_categories), age_categories, numclasses)
@@ -224,8 +224,9 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
         epi.epilist.human.work_balance[cat_idx[7:10, :]] .= 0.0
 
         # Run simulation
-        abuns = zeros(UInt32, size(epi.abundances.matrix, 1), sum(epi.epienv.active), floor(Int, times/timestep) + 1)
-        @time simulate_record!(abuns, epi, times, interval, timestep, save = save, save_path = savepath)
+        abuns = zeros(UInt16, size(epi.abundances.matrix, 1), sum(epi.epienv.active), floor(Int, times/timestep) + 1)
+        @time simulate_record!(abuns, epi, times, interval, timestep, save = save, save_path = joinpath(savepath, "locations/location_$i"))
+        cum_inf[i] = sum(Float64, abuns[cat_idx[:, 2], :, :], dims = (1, 3))[1, :, 1]
     end
 
     # Write to pipeline
@@ -246,7 +247,7 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
         display(plot_epidynamics(epi, abuns, category_map = category_map))
         display(plot_epiheatmaps(epi, abuns, steps = [30]))
     end
-    return abuns
+    return cum_inf
 end
 
 config = "data_config.yaml"
@@ -257,13 +258,16 @@ file = "Top_100_locs.csv"
 
 # Pollution run
 abuns_pollution = StandardAPI(config, "test_uri", "test_git_sha") do api
-    run_model(api, times, interval, timestep, file, save = true)
+    run_model(api, times, interval, timestep, file)
 end;
+JLD.save("Abuns_pollution.jld", "abuns", abuns_pollution)
 
 # Normal run
 abuns_normal = StandardAPI(config, "test_uri", "test_git_sha") do api
     run_model(api, times, interval, timestep, file, include_pollution = false)
 end;
+JLD.save("Abuns_normal.jld", "abuns", abuns_normal)
+
 
 numclasses = 8
 age_categories = 10
@@ -332,3 +336,22 @@ using DataFrames
 top_100 = find_100[sortperm(ranked_rep, rev = true)][1:100]
 top_100_dat = DataFrame(location = top_100)
 CSV.write("Top_100_locs.csv", top_100_dat)
+
+
+top_100 = CSV.read("Top_100_locs.csv")
+poll = ustrip.(epi.epienv.pollution.matrix[epi.epienv.active])
+ref_array = fill(NaN, size(epi.epienv.active))
+ref_array[epi.epienv.active] .= collect(1:sum(epi.epienv.active))
+grid_ids = Int64.(ref_array[top_100[!, :location]])
+cum_inf = hcat(abuns_pollution...)
+cum_norm = hcat(abuns_normal...)
+enough_cases = findall(cum_inf .> 5)
+grids = [enough_cases[i][1] for i in eachindex(enough_cases)]
+total = total_pop[epi.epienv.active]
+display(scatter(poll[grids], cum_inf[enough_cases] ./total[grids], xlab = "Pollution (\\mu g m^{-3})", ylab = "Proportion exposed", legend = false, zcolor = poll[grids], mc = :default_r, msc = :white, ma = 0.8, size = (1000, 800), margin = 10*Plots.mm))
+Plots.pdf("Top_100_of_total.pdf")
+
+
+total = cum_inf[enough_cases] ./ (cum_norm[enough_cases] .+ cum_inf[enough_cases])
+display(scatter(poll[grids], total, xlab = "Pollution (\\mu g m^{-3})", ylab = "Proportion exposed", legend = false, zcolor = poll[grids], mc = :default_r, msc = :black, ma = 0.8, size = (1000, 800), margin = 10*Plots.mm))
+Plots.pdf("Top_100_of_normal.pdf")
