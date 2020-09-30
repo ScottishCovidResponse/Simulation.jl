@@ -268,6 +268,8 @@ abuns_normal = StandardAPI(config, "test_uri", "test_git_sha") do api
 end;
 JLD.save("Abuns_normal.jld", "abuns", abuns_normal)
 
+abuns_pollution = JLD.load("Abuns_pollution.jld", "abuns")
+abuns_normal = JLD.load("Abuns_normal.jld", "abuns")
 
 numclasses = 8
 age_categories = 10
