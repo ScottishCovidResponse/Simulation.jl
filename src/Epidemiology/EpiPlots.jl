@@ -116,7 +116,7 @@ Plot the dynamics of `abuns` summed over space, as a function of time.
 """
 plot_epidynamics
 @userplot Plot_EpiDynamics
-@recipe function f(h::Plot_EpiDynamics; category_map=nothing)
+@recipe function f(h::Plot_EpiDynamics; category_map=nothing, colours=nothing)
     _check_args(h)
     epi, abuns = h.args
 
@@ -132,6 +132,9 @@ plot_epidynamics
         yguide --> "Totals"
         @series begin
             label := name
+            if !isnothing(colours)
+                color := colours[idx]
+            end
             data
         end
     end
