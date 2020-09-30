@@ -92,4 +92,4 @@ abuns = zeros(Int64, numclasses, prod(grid), div(times, interval) + 1)
 
 soln_det.soln.t .+= 1
 plot_det(soln_det)
-plot_epidynamics!(epi, abuns)
+plot_epidynamics!(epi, abuns, linestyle = :dash, colours = [:blue, :orange, :green, :purple, :white])
