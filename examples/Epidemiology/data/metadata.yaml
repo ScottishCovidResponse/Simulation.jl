@@ -1,4 +1,36 @@
 - accessibility: 0
+  component: cfr_byage
+  data_product: prob_hosp_and_cfr/data_for_scotland
+  extension: h5
+  filename: prob_hosp_and_cfr/data_for_scotland/0.20200813.0/0.20200813.0.h5
+  namespace: EERA
+  verified_hash: 6777323dc4c7e8eb70c2b985a15742946216e4c0
+  version: 0.20200813.0
+- accessibility: 0
+  component: T_rec
+  data_product: fixed-parameters/T_rec
+  extension: toml
+  filename: fixed-parameters/T_rec/0.1.0/0.1.0.toml
+  namespace: EERA
+  verified_hash: 304153d09b69170fd2dcf34492b501b36bc21146
+  version: 0.1.0
+- accessibility: 0
+  component: T_hos
+  data_product: fixed-parameters/T_hos
+  extension: toml
+  filename: fixed-parameters/T_hos/0.1.0/0.1.0.toml
+  namespace: EERA
+  verified_hash: ee2cfe3a14e3b4caca2a888d4b6af1128726c7bd
+  version: 0.1.0
+- accessibility: 0
+  component: array
+  data_product: records/pollution
+  extension: h5
+  filename: records/pollution/0.1.0/0.1.0.h5
+  namespace: SCRC
+  verified_hash: efe7371dae2fabf911d356d3c5ec488e9581da33
+  version: 0.1.0
+- accessibility: 0
   component: urban_rural_classification/age/persons
   data_product: human/demographics/population/scotland
   extension: h5
@@ -142,3 +174,43 @@
   namespace: SCRC
   verified_hash: 835fa268cb115510d3195b957fe8dd61665e5f6b
   version: 1.0.1
+- accessibility: 0
+  component: symptom-probability
+  data_product: human/infection/SARS-CoV-2/symptom-probability
+  extension: toml
+  filename: human/infection/SARS-CoV-2/symptom-probability/0.1.0/0.1.0.toml
+  namespace: SCRC
+  verified_hash: eaa3833986a51b2f079dda9b702b0a3d510f2255
+  version: 0.1.0
+- accessibility: 0
+  component: symptom-delay
+  data_product: human/infection/SARS-CoV-2/symptom-delay
+  extension: toml
+  filename: human/infection/SARS-CoV-2/symptom-delay/0.1.0/0.1.0.toml
+  namespace: SCRC
+  verified_hash: 68cebe4e507ca71b6d518313bd75c9326f3b6359
+  version: 0.1.0
+- accessibility: 0
+  component: latent-period
+  data_product: human/infection/SARS-CoV-2/latent-period
+  extension: toml
+  filename: human/infection/SARS-CoV-2/latent-period/0.1.0/0.1.0.toml
+  namespace: SCRC
+  verified_hash: 7c0e14caec08674d7d4e52c305cb4320babaf90f
+  version: 0.1.0
+- accessibility: 0
+  component: infectious-duration
+  data_product: human/infection/SARS-CoV-2/infectious-duration
+  extension: toml
+  filename: human/infection/SARS-CoV-2/infectious-duration/0.1.0/0.1.0.toml
+  namespace: SCRC
+  verified_hash: 67e0759d404d150b3f3eb3d5838570880fe8dd25
+  version: 0.1.0
+- accessibility: 0
+  component: asymptomatic-period
+  data_product: human/infection/SARS-CoV-2/asymptomatic-period
+  extension: toml
+  filename: human/infection/SARS-CoV-2/asymptomatic-period/0.1.0/0.1.0.toml
+  namespace: SCRC
+  verified_hash: 8142974eaf721e6606830b36ffac3c3a00337a77
+  version: 0.1.0
