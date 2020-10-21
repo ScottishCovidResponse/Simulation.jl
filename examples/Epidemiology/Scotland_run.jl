@@ -177,7 +177,7 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     epi.epilist.human.work_balance[cat_idx[7:10, :]] .= 0.0
 
     # Run simulation
-    abuns = zeros(UInt32, size(epi.abundances.matrix, 1), N_cells, floor(Int, times/timestep) + 1)
+    abuns = zeros(Int64, size(epi.abundances.matrix, 1), N_cells, floor(Int, times/timestep) + 1)
     @time simulate_record!(abuns, epi, times, interval, timestep, save = save, save_path = savepath)
 
     # Write to pipeline
@@ -205,5 +205,5 @@ config = "./examples/Epidemiology/data_config.yaml"
 download_data_registry(config)
 times = 2months; interval = 1day; timestep = 1day
 abuns = StandardAPI(config, "test_uri", "test_git_sha") do api
-    run_model(api, times, interval, timestep, do_plot=false)
+    run_model(api, times, interval, timestep, do_plot=true)
 end;

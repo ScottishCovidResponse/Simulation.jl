@@ -12,6 +12,8 @@ using Turing
 using DataFrames
 using StatsPlots
 
+# include("../../src/Epidemiology/Inference.jl")
+
 ## Simple SIRGrowth model
 
 ### Set model parameters
@@ -68,11 +70,16 @@ Y = abuns
     mean_dispersal_dist = 5.0km # average dispersal distance of virus per each infected
     # I0 = .. Inference.jl #72
     I = pop_size*β_env + pop_size*β_force
-    u0 = [pop_size-I,I,σ*I,0.0] # Susceptible, Infected, Recovered, Dead at time 0
-    params = [β_env, β_force, σ, virus_growth, virus_decay, mean_dispersal_dist]
+    t0 = [pop_size-I, I, σ*I, 0.0] # Susceptible, Infected, Recovered, Dead at time 0
+    params = [β_env,
+              β_force,
+              σ,
+              virus_growth,
+              virus_decay,
+              mean_dispersal_dist]
     tspan = (0.0,float(l))
-    prob = ODEProblem(SIR_wrapper!,
-            u0,
+    prob = ODEProblem(SIR_wrapper,
+            t0,
             tspan,
             params)
     sol = solve(prob,
@@ -81,22 +88,22 @@ Y = abuns
     # sol_C = Array(sol)[4,:] # Cumulative cases
     sol_X = sol_C[2:end] - sol_C[1:(end-1)]
 
-    for i in 1:l
-      y[i] ~ Poisson(sol_X[i])
-    end
+    # for i in 1:l
+    #   y[i] ~ Poisson(sol_X[i])
+    # end
   end;
 
 
-  ode_nuts = sample(bayes_sirGrowth(Y),NUTS(0.65),10000);
+ode_nuts = sample(bayes_sirGrowth(Y),NUTS(0.65),10000);
 
 
-  describe(ode_nuts)
+describe(ode_nuts)
 
 
-  plot(ode_nuts)
+plot(ode_nuts)
 
 
-  posterior = DataFrame(ode_nuts)
+posterior = DataFrame(ode_nuts)
 
 
 #   histogram2d(posterior[!,:β],posterior[!,:i₀],
