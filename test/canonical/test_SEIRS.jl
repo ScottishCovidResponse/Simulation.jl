@@ -38,8 +38,8 @@ numclasses = nrow(abun_h)
 
 # Set non-pathogen mediated transitions
 mu = 1/7days
-sigma = 0.1/days
-epsilon = 0.01/day
+sigma = 1/7/days
+epsilon = 1/21/day
 transitions = DataFrame([
   (from="Exposed", to="Infected", prob=mu),
   (from="Infected", to="Recovered", prob=sigma),
@@ -53,7 +53,7 @@ death = fill(0.0/day, numclasses)
 beta_force = 1.0/day
 beta_env = 1.0/day
 virus_growth = 1.0/day
-virus_decay = 1.0/2days
+virus_decay = 1.0/day
 param = (birth = birth, death = death, virus_growth = virus_growth, virus_decay = virus_decay, beta_env = beta_env, beta_force = beta_force)
 
 # Dispersal kernels for virus and disease classes
@@ -70,7 +70,7 @@ rel = Gauss{eltype(epienv.habitat)}()
 epi = EpiSystem(epilist, epienv, rel)
 
 # Run simulation
-times = 2years; interval = 1day; timestep = 1day
+times = 2years; interval = 1day; timestep = 0.5day
 abuns = zeros(Int64, numclasses, prod(grid), div(times, interval) + 1)
 @time simulate_record!(abuns, epi, times, interval, timestep; save=do_save, save_path=save_path)
 

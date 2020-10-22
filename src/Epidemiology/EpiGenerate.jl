@@ -212,7 +212,10 @@ function classupdate!(epi::EpiSystem, timestep::Unitful.Time)
                 trans_val = params.transition[i, k] +
                     params.transition_virus[i, k] * env_inf +
                     params.transition_force[i, k] * force_inf
-                trans_prob = 1.0 - exp(-trans_val * timestep)
+                #trans_prob = 1.0 - exp(-trans_val * timestep)
+                trans_prob = trans_val * timestep
+                0.0 ≤ trans_prob ≤ 1.0 ||
+                    error("Probability too high for Binomial random draw - try a smaller timestep")
 
                 # Skip if probability is zero
                 iszero(trans_prob) && continue

@@ -92,10 +92,10 @@ transitions = DataFrame([
 ## High transmission & 100% case fatality
 birth = fill(0.0/day, numclasses)
 death = fill(0.0/day, numclasses)
-virus_growth_asymp = virus_growth_presymp = virus_growth_symp = 1e-3/day
-virus_decay = 1/3days
-beta_force = 1e3/day
-beta_env = 1e3/day
+virus_growth_asymp = virus_growth_presymp = virus_growth_symp = 1.0/day
+virus_decay = 1/day
+beta_force = 1.0/day
+beta_env = 1.0/day
 
 param = (birth = birth, death = death, virus_growth = [virus_growth_asymp virus_growth_presymp virus_growth_symp], virus_decay = virus_decay, beta_force = beta_force, beta_env = beta_env)
 
@@ -119,7 +119,7 @@ human(epi.abundances)[2, 1] = new_exposed
 
 # Run simulation
 abuns = zeros(Int64, size(epi.abundances.matrix, 1), size(epi.abundances.matrix, 2), 366)
-times = 1year; interval = 1day; timestep = 1day
+times = 1year; interval = 1day; timestep = 0.5day
 @time simulate_record!(abuns, epi, times, interval, timestep; save=do_save, save_path=joinpath(save_path, "high_trans"))
 
 
@@ -158,7 +158,7 @@ virus(epi.abundances)[1, 1] = new_virus
 human(epi.abundances)[2, 1] = new_exposed
 
 # Run simulation
-times = 1year; interval = 1day; timestep = 1day
+times = 1year; interval = 1day; timestep = 0.5day
 abuns = zeros(Int64, numclasses, prod(grid), div(times, interval) + 1)
 @time simulate_record!(abuns, epi, times, interval, timestep; save=do_save, save_path=joinpath(save_path, "low_trans"))
 

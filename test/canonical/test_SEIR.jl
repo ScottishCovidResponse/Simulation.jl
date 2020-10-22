@@ -67,7 +67,7 @@ rel = Gauss{eltype(epienv.habitat)}()
 epi = EpiSystem(epilist, epienv, rel)
 
 # Run simulation
-times = 2years; interval = 1day; timestep = 1day
+times = 2years; interval = 1day; timestep = 0.5day
 abuns = zeros(Int64, numclasses, prod(grid), div(times, interval) + 1)
 @time simulate_record!(abuns, epi, times, interval, timestep; save=do_save, save_path=save_path)
 
