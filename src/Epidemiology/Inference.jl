@@ -1,3 +1,11 @@
+function ODE_wrapper(u0::Vector{Float64}, tspan::Vector{Float64}, params::NamedTuple)
+    area = params.area
+    grid_size = params.grid_size
+    unit = 1/oneunit(params.beta_env)
+    runtimes = (times = unit * tspan[2],
+    interval = unit, timestep = unit)
+    return SIR_wrapper(grid_size, area, params, runtimes)
+end
 """
     SIR_wrapper(grid_size::Tuple{Int64, Int64}, area::Unitful.Area{Float64}, params::NamedTuple, runtimes::NamedTuple)
 
@@ -30,7 +38,7 @@ function SIR_wrapper!(grid_size::Tuple{Int64, Int64}, area::Unitful.Area{Float64
         (name="Force", initial=0),
     ])
     numvirus = nrow(abun_v)
-    
+
     # Set initial population sizes for all human categories
     susceptible = 500_000 * Ncells
     abun_h = DataFrame([
