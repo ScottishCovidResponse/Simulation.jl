@@ -12,6 +12,7 @@ abstract type AbstractEpiSystem{Part <: AbstractEpiEnv, EL <: EpiList, TR <: Abs
 
 mutable struct EpiCache
   virusmigration::Array{Float64, 2}
+  epitransitions::EpiTransition
   valid::Bool
 end
 
@@ -60,6 +61,7 @@ mutable struct EpiSystem{U <: Integer, VecRNGType <: AbstractVector{<:Random.Abs
   seeding::EpiSeedInf
   ordered_active::Vector{Int64}
 end
+
 function EpiSystem(abundances::EpiLandscape{U, VecRNGType}, epilist::EL, epienv::EE,
     ordinariness::Union{Matrix{Float64}, Missing}, relationship::ER, lookup::EpiLookup,
     cache::EpiCache, seeding::EpiSeedInf
@@ -88,7 +90,9 @@ function EpiSystem(popfun::F, epilist::EpiList, epienv::GridEpiEnv,
   lookup = EpiLookup(home_lookup, work_lookup)
   vm = zeros(Float64, size(ml.matrix))
   seeding = EpiSeedInf(initial_infected, missing, seed_fun)
-  return EpiSystem(ml, epilist, epienv, missing, rel, lookup, EpiCache(vm, false), initial_infected)
+  transitions_from = transitions_to = [1]
+
+  return EpiSystem(ml, epilist, epienv, missing, rel, lookup, EpiCache(vm, EpiTransitions(epilist), false), initial_infected)
 end
 
 function EpiSystem(epilist::EpiList, epienv::GridEpiEnv, rel::AbstractTraitRelationship,
@@ -98,7 +102,7 @@ function EpiSystem(epilist::EpiList, epienv::GridEpiEnv, rel::AbstractTraitRelat
 end
 
 function EpiSystem(epilist::EpiList, epienv::GridEpiEnv, rel::AbstractTraitRelationship,
-        initial_population::A, seeding::EpiSeedInf, intnum::U = Int64(1);
+        initial_population::A, seeding::EpiSeedInf, epitrans::EpiTransition, intnum::U = Int64(1);
         rngtype::Type{R} = Random.MersenneTwister
         ) where {U <: Integer, A <: AbstractArray, R <: Random.AbstractRNG}
     if size(initial_population) != (length(epilist.human.susceptible), size(epienv.active)...)
@@ -121,7 +125,7 @@ function EpiSystem(epilist::EpiList, epienv::GridEpiEnv, rel::AbstractTraitRelat
 
     vm = zeros(Float64, size(ml.matrix))
 
-    epi = EpiSystem(ml, epilist, epienv, missing, rel, lookup, EpiCache(vm, false), seeding)
+    epi = EpiSystem(ml, epilist, epienv, missing, rel, lookup, EpiCache(vm, epitrans, false), seeding)
 
     # Add in the initial susceptible population
     # TODO Need to fix code so it doesn't rely on name of susceptible class
@@ -217,6 +221,8 @@ end
 function invalidatecaches!(epi::AbstractEpiSystem)
     epi.ordinariness = missing
     epi.cache.virusmigration .= 0
+    epi.cache.epitransitions.virus_effects .= 1.0
+    epi.cache.epitransitions.transition_effects .= 1.0
     epi.cache.valid = false
 end
 
@@ -313,4 +319,15 @@ function _lookup(from::NamedTuple, to::NamedTuple, relSquareSize::Float64, dispe
       [from.y *relSquareSize - relSquareSize, from.x * relSquareSize - relSquareSize, to.y * relSquareSize - relSquareSize, to.x * relSquareSize - relSquareSize],
       [from.y * relSquareSize, from.x * relSquareSize, to.y * relSquareSize, to.x * relSquareSize],
       maxevals= 100, rtol = 0.01)[1] / relSquareSize^2
+end
+
+function calc_transition_effects!(epi::EpiSystem, env_layer::GriddedPollution, j::Int64)
+    pol = get_pollution(epi.epienv, j)
+    params = epi.epilist.params
+    epi.cache.epitransitions.virus_effects .= max(1.0, pol * params.pollution_infectivity)
+    epi.cache.epitransitions.transition_effects[epi.cache.epitransitions.transitions_to, epi.cache.epitransitions.transitions_from] .= max(1.0, pol * params.pollution_infectivity)
+end
+
+function calc_transition_effects!(epi::EpiSystem, env_layer::NoPollution, j::Int64)
+    return epi.cache.epitransitions.transition_effects
 end

@@ -202,6 +202,13 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     # multiple dispatch in action
     rngtype = stochasticmode ? Random.MersenneTwister : MedianGenerator
 
+    cat_idx = reshape(1:(numclasses * age_categories), age_categories, numclasses)
+
+    # Pollution effecting which transitions
+    transition_from = [cat_idx[:, [5, 5, 6]]...]
+    transition_to = [cat_idx[:, [6, 8, 8]]...]
+    epitransition = EpiTransition(epilist, transition_from, transition_to)
+
     ismissing(file) && error("No file supplied")
     locs = Int64.(CSV.read(file)[!, :location])
     initial_infecteds = 100
@@ -213,10 +220,8 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
         seeding = Simulation.EpiSeedInf(initial_infecteds, [locs[i]], seed_fun)
 
         # Create epi system with all information
-        @time epi = EpiSystem(epilist, epienv, rel, permutedims(scotpop, (:age, :grid_x, :grid_y)), seeding, UInt16(1), rngtype = rngtype)
+        @time epi = EpiSystem(epilist, epienv, rel, permutedims(scotpop, (:age, :grid_x, :grid_y)), seeding, epitransition, UInt16(1), rngtype = rngtype)
 
-        # Populate susceptibles according to actual population spread
-        cat_idx = reshape(1:(numclasses * age_categories), age_categories, numclasses)
         N_cells = size(epi.abundances.matrix, 2)
 
         # Turn off work moves for <20s and >70s

@@ -155,7 +155,7 @@ function classupdate!(epi::EpiSystem, timestep::Unitful.Time)
         # will result +=/-= 0 at end of inner loop, so safe to skip
         iszero(sum_pop(human(epi.abundances), j)) && continue
 
-        pol = get_pollution(epi.epienv, j)
+        calc_transition_effects!(epi, epi.epienv.pollution, j)
 
         rng = epi.abundances.rngs[Threads.threadid()]
         N = sum_pop(epi.abundances.matrix, j)
@@ -184,14 +184,14 @@ function classupdate!(epi::EpiSystem, timestep::Unitful.Time)
                     (N^params.freq_vs_density_env)
 
                 # Direct transmission infection rate from k to i
-                force_inf =  max(1.0, pol * params.pollution_infectivity) * (params.age_mixing[k_age_cat, :] ⋅
+                force_inf =  (params.age_mixing[k_age_cat, :] ⋅
                              virus(epi.abundances)[force_cats, j]) /
                     (N^params.freq_vs_density_force)
 
                 # Add to baseline transitional probabilities from k to i
-                trans_val = params.transition[i, k] +
-                    params.transition_virus[i, k] * env_inf +
-                    params.transition_force[i, k] * force_inf
+                trans_val = (params.transition[i, k] * epi.cache.epitransitions.transition_effects[i,k]) +
+                    (params.transition_virus[i, k] * env_inf) +
+                    (params.transition_force[i, k] * epi.cache.epitransitions.virus_effects[i, k] * force_inf)
                 trans_prob = 1.0 - exp(-trans_val * timestep)
 
                 # Skip if probability is zero

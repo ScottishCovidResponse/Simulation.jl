@@ -118,7 +118,7 @@ export NoControl, Lockdown
 include("Epidemiology/shrink.jl")
 export shrink_to_active, convert_population
 
-include("Epidemiology/Pollution.jl")
+include("Epidemiology/EpiPollution.jl")
 export NoPollution, GriddedPollution
 
 include("Epidemiology/EpiEnv.jl")
@@ -132,6 +132,9 @@ export EpiMovement, Commuting
 
 include("Epidemiology/EpiList.jl")
 export EpiList, SIS, SIR, SEIR, SEIRS, SEI2HRD
+
+include("Epidemiology/EpiTransitions.jl")
+export EpiTransition, calc_transition_effects!
 
 include("Epidemiology/EpiLandscape.jl")
 export EpiLandscape, human, virus
