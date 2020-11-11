@@ -345,3 +345,10 @@ summed_tab = rbind(summed_tab, summed_tab2)
 pdf('Pollution_hosp.pdf', paper = 'a4r', width = 11, height = 8)
 print(ggplot(summed_tab) + geom_line(aes(x = date, y = x1, group = hb_name, colour = hb_name)) + ylab('Number in hospital') + xlab('') + theme_cowplot() + facet_wrap(~ pollution))
 dev.off()"
+
+
+poll = DataFrame(poll = pm2_5.matrix[epienv.active][1:end], grid_id = ids)
+poll_join = join(poll, conv_tab, on = :grid_id)
+mean_poll = by(poll_join, [:hb_id, :hb_name], df -> mean(df[:poll]))
+rename!(mean_poll, :x1 => :pm2_5)
+CSV.write("HB_pollution.txt", mean_poll)

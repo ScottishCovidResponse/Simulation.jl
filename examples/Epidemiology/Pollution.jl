@@ -63,6 +63,7 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     pollution = pollution[5513m .. 470513m, 531500m .. 1221500m, :]
     pm2_5 = GriddedPollution(pollution[pollutant = "pm2-5"])
     pm2_5.matrix = shrink_to_active(pm2_5.matrix, .!isnan.(total_pop))
+    pm2_5.matrix .-= mean(pm2_5.matrix)
 
     total_pop = shrink_to_active(total_pop);
 
@@ -261,13 +262,13 @@ file = "Top_100_locs.csv"
 abuns_pollution = StandardAPI(config, "test_uri", "test_git_sha") do api
     run_model(api, times, interval, timestep, file)
 end;
-JLD.save("Abuns_pollution.jld", "abuns", abuns_pollution)
+JLD.save("Abuns_pollution_mean.jld", "abuns", abuns_pollution)
 
 # Normal run
 abuns_normal = StandardAPI(config, "test_uri", "test_git_sha") do api
     run_model(api, times, interval, timestep, file, include_pollution = false)
 end;
-JLD.save("Abuns_normal.jld", "abuns", abuns_normal)
+JLD.save("Abuns_normal_mean.jld", "abuns", abuns_normal)
 
 abuns_pollution = JLD.load("Abuns_pollution.jld", "abuns")
 abuns_normal = JLD.load("Abuns_normal.jld", "abuns")
@@ -352,7 +353,7 @@ enough_cases = findall(cum_inf .> 5)
 grids = [enough_cases[i][1] for i in eachindex(enough_cases)]
 total = total_pop[epi.epienv.active]
 display(scatter(poll[grids], cum_inf[enough_cases] ./total[grids], xlab = "Pollution (\\mu g m^{-3})", ylab = "Proportion exposed", legend = false, zcolor = poll[grids], mc = :default_r, msc = :white, ma = 0.8, size = (1000, 800), margin = 10*Plots.mm))
-Plots.pdf("Top_100_of_total.pdf")
+Plots.pdf("Top_100_of_total_mean.pdf")
 
 
 total = cum_inf[enough_cases] ./ (cum_norm[enough_cases] .+ cum_inf[enough_cases])
