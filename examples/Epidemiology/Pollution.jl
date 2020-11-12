@@ -63,7 +63,6 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     pollution = pollution[5513m .. 470513m, 531500m .. 1221500m, :]
     pm2_5 = GriddedPollution(pollution[pollutant = "pm2-5"])
     pm2_5.matrix = shrink_to_active(pm2_5.matrix, .!isnan.(total_pop))
-    pm2_5.matrix .-= mean(pm2_5.matrix)
 
     total_pop = shrink_to_active(total_pop);
 

@@ -171,7 +171,7 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
 
     if include_pollution
         epienv = simplehabitatAE(298.0K, size(total_pop), area, Lockdown(20days), pollution = pm2_5)
-        param = (; param..., pollution_infectivity = 1.1/(μg * m^-3))
+        param = (; param..., pollution_infectivity = 0.05/(μg * m^-3), pollution_severity = 0.5/(μg * m^-3))
     else
         epienv = simplehabitatAE(298.0K, size(total_pop), area, Lockdown(20days), pollution = NoPollution())
     end
@@ -232,25 +232,7 @@ function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.
     abuns = zeros(UInt16, size(epi.abundances.matrix, 1), sum(epi.epienv.active), floor(Int, times/timestep) + 1)
     @time simulate_record!(abuns, epi, times, interval, timestep, save = save, save_path = savepath)
 
-    # Write to pipeline
-    #write_array(api, "simulation-outputs", "final-abundances", DataPipelineArray(abuns))
-
-    if do_plot
-        # View summed SIR dynamics for whole area
-        category_map = (
-            "Susceptible" => cat_idx[:, 1],
-            "Exposed" => cat_idx[:, 2],
-            "Asymptomatic" => cat_idx[:, 3],
-            "Presymptomatic" => cat_idx[:, 4],
-            "Symptomatic" => cat_idx[:, 5],
-            "Hospital" => cat_idx[:, 6],
-            "Recovered" => cat_idx[:, 7],
-            "Deaths" => cat_idx[:, 8],
-        )
-        display(plot_epidynamics(epi, abuns, category_map = category_map))
-        display(plot_epiheatmaps(epi, abuns, steps = [30]))
-    end
-    return abuns
+    return abuns, epi
 end
 
 config = "data_config.yaml"
@@ -260,12 +242,12 @@ times = 3months; interval = 1day; timestep = 1day
 file = "Top_100_locs.csv"
 
 # Pollution run
-abuns_pollution = StandardAPI(config, "test_uri", "test_git_sha") do api
+abuns_pollution, epi = StandardAPI(config, "test_uri", "test_git_sha") do api
     run_model(api, times, interval, timestep, file)
 end;
 
 # Normal run
-abuns_normal = StandardAPI(config, "test_uri", "test_git_sha") do api
+abuns_normal, epi = StandardAPI(config, "test_uri", "test_git_sha") do api
     run_model(api, times, interval, timestep, file, include_pollution = false)
 end;
 

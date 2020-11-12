@@ -325,7 +325,7 @@ function calc_transition_effects!(epi::EpiSystem, env_layer::GriddedPollution, j
     pol = get_pollution(epi.epienv, j)
     params = epi.epilist.params
     epi.cache.epitransitions.virus_effects .= max(1.0, pol * params.pollution_infectivity)
-    epi.cache.epitransitions.transition_effects[epi.cache.epitransitions.transitions_to, epi.cache.epitransitions.transitions_from] .= max(1.0, pol * params.pollution_infectivity)
+    epi.cache.epitransitions.transition_effects[epi.cache.epitransitions.transitions_to, epi.cache.epitransitions.transitions_from] .= max(1.0, pol * params.pollution_severity)
 end
 
 function calc_transition_effects!(epi::EpiSystem, env_layer::NoPollution, j::Int64)

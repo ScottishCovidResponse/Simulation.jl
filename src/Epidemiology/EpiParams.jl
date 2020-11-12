@@ -20,12 +20,14 @@ mutable struct EpiParams{U <: Unitful.Units} <: AbstractParams
     age_mixing::Matrix{Float64}
     env_virus_scale::Float64
     pollution_infectivity::Unitful.Quantity{Float64}
+    pollution_severity::Unitful.Quantity{Float64}
     function EpiParams{U}(births::Vector{TimeUnitType{U}}, virus_growth::Vector{TimeUnitType{U}},
-        virus_decay::TimeUnitType{U}, transition::Matrix{TimeUnitType{U}}, transition_force::Matrix{TimeUnitType{U}}, transition_virus::Matrix{TimeUnitType{U}}, freq_vs_density_force::Float64, freq_vs_density_env::Float64, age_mixing::Matrix{Float64}, env_virus_scale::Float64 = 1.0, pollution_infectivity::Unitful.Quantity{Float64} = 1.0/(μg * m^-3)) where {U <: Unitful.Units}
+        virus_decay::TimeUnitType{U}, transition::Matrix{TimeUnitType{U}}, transition_force::Matrix{TimeUnitType{U}}, transition_virus::Matrix{TimeUnitType{U}}, freq_vs_density_force::Float64, freq_vs_density_env::Float64, age_mixing::Matrix{Float64}, env_virus_scale::Float64 = 1.0, pollution_infectivity::Unitful.Quantity{Float64} = 1.0/(μg * m^-3),
+        pollution_severity::Unitful.Quantity{Float64} = 1.0/(μg * m^-3)) where {U <: Unitful.Units}
         size(transition, 1) == size(transition, 2) || error("Transition matrix should be square.")
         size(transition, 1) == size(transition_virus, 1) || error("Transition matrices should match dimensions.")
         size(transition_force, 1) == size(transition_virus, 1) || error("Transition matrices should match dimensions.")
-        new{U}(births, virus_growth, virus_decay, transition, transition_force, transition_virus, freq_vs_density_force, freq_vs_density_env, age_mixing, env_virus_scale, pollution_infectivity)
+        new{U}(births, virus_growth, virus_decay, transition, transition_force, transition_virus, freq_vs_density_force, freq_vs_density_env, age_mixing, env_virus_scale, pollution_infectivity, pollution_severity)
     end
 end
 
@@ -109,6 +111,9 @@ function transition(params::NamedTuple, paramDat::DataFrame, nclasses::Int64, in
     if !haskey(params, :pollution_infectivity)
         params = (; params..., pollution_infectivity = 1.0/(μg * m^-3))
     end
+    if !haskey(params, :pollution_severity)
+        params = (; params..., pollution_severity = 1.0/(μg * m^-3))
+    end
 
     tmat = create_transition_matrix(params, paramDat, age_categories, nclasses)
 
@@ -121,5 +126,5 @@ function transition(params::NamedTuple, paramDat::DataFrame, nclasses::Int64, in
     # Virus growth and decay
     v_growth = create_virus_vector(params.virus_growth, age_categories, nclasses, inf_cat)
 
-  return EpiParams{typeof(unit(params.beta_force[1]))}(params.birth[1:end], v_growth, params.virus_decay, tmat, vfmat, vmat, params.freq_vs_density_force, params.freq_vs_density_env, params.age_mixing, params.env_scale, params.pollution_infectivity)
+  return EpiParams{typeof(unit(params.beta_force[1]))}(params.birth[1:end], v_growth, params.virus_decay, tmat, vfmat, vmat, params.freq_vs_density_force, params.freq_vs_density_env, params.age_mixing, params.env_scale, params.pollution_infectivity, params.pollution_severity)
 end
