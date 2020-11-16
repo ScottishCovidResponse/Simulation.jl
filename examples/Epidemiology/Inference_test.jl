@@ -65,35 +65,83 @@ Y = abuns
     β_env ~ Uniform(0.0,1.0) # transmission from environmental reservoir
     β_force ~ Uniform(0.0,1.0) # transmission from airborne force of infection
     σ ~ Uniform(0.0,1.0) #recovery
+
     virus_growth = 1e-3/day # rate of virus produced per infected
     virus_decay = 1e-3/day # decay rate of environmental reservoir
     mean_dispersal_dist = 5.0km # average dispersal distance of virus per each infected
     # I0 = .. Inference.jl #72
     I = pop_size*β_env + pop_size*β_force
     t0 = [pop_size-I, I, σ*I, 0.0] # Susceptible, Infected, Recovered, Dead at time 0
+    # Set up
+    Ncells = prod(grid_size)
+
+    β_env = convert(typeof(1e-3/day), β_env/day)
+    β_force = convert(typeof(1e-3/day), β_force/day)
+    σ = convert(typeof(1e-3/day), σ/day)
+
+    # Set initial population sizes for all pathogen categories
+    virus = 0
+    abun_v = DataFrame([
+        (name="Environment", initial=virus),
+        (name="Force", initial=0),
+    ])
+    numvirus = nrow(abun_v)
+
+    # Set initial population sizes for all human categories
+    susceptible = 500_000 * Ncells
+    abun_h = DataFrame([
+        (name="Susceptible", type=Susceptible, initial=susceptible),
+        (name="Infected", type=Infectious, initial=0),
+        (name="Recovered", type=Removed, initial=0),
+        (name="Dead", type=Removed, initial=0),
+    ])
+    numclasses = nrow(abun_h)
+
+    # Set non-pathogen mediated transitions
+    transitions = DataFrame([
+        (from="Infected", to="Recovered", prob=σ),
+    ])
+
+    # Set simulation parameters & create transition matrices
+    birth = fill(0.0/day, numclasses)
+    death = fill(0.0/day, numclasses)
+    param = (birth = birth, death = death, virus_growth = virus_growth, virus_decay = virus_decay, beta_env = β_env, beta_force = β_force)
+
+    # Set up simple gridded environment
+    epienv = simplehabitatAE(298.0K, grid_size, area, NoControl())
+
+    # Dispersal kernels for virus and disease classes
+    dispersal_dists = fill(mean_dispersal_dist, Ncells)
+    kernel = GaussianKernel.(dispersal_dists, 1e-10)
+    movement = EpiMovement(kernel)
+
+    # Traits for match to environment (turned off currently through param choice, i.e. virus matches environment perfectly)
+    traits = GaussTrait(fill(298.0K, numvirus), fill(0.1K, numvirus))
+    epilist = EpiList(traits, abun_v, abun_h, movement, transitions, param)
+
+    # Create epi system with all information
+    rel = Gauss{eltype(epienv.habitat)}()
+    epi = EpiSystem(epilist, epienv, rel)
+
+    # Seed infected category at a single location
+    human(epi.abundances)[2, 1] = 100 * Ncells
+
     # params = [β_env,
     #           β_force,
     #           σ,
     #           virus_growth,
     #           virus_decay,
     #           mean_dispersal_dist]
-    params = (beta_env = β_env,
-             beta_force = β_force,
-             sigma = σ,
-             virus_growth = virus_growth,
-             virus_decay = virus_decay,
-             mean_dispersal_dist = mean_dispersal_dist,
-             grid_size = grid_size,
-             area = area)
+    params = [epi]
     tspan = (0.0,float(l))
     prob = ODEProblem(ODE_wrapper,
             t0,
             tspan,
-            params)
+            epi)
     sol = solve(prob,
                 Tsit5(),
                 saveat = 1.0)
-    # sol_C = Array(sol)[4,:] # Cumulative cases
+    sol_C = Array(sol)[4,:] # Cumulative cases
     sol_X = sol_C[2:end] - sol_C[1:(end-1)]
 
     # for i in 1:l

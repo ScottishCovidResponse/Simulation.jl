@@ -1,10 +1,6 @@
-function ODE_wrapper(u0::Vector{Float64}, tspan::Vector{Float64}, params::NamedTuple)
-    area = params.area
-    grid_size = params.grid_size
-    unit = 1/oneunit(params.beta_env)
-    runtimes = (times = unit * tspan[2],
-    interval = unit, timestep = unit)
-    return SIR_wrapper(grid_size, area, params, runtimes)
+function ODE_wrapper(u0::Vector{Float64}, tspan::Vector{Float64}, params::EpiSystem, t::Float64)
+    update!(params, 1.0day)
+    return params.abundances.matrix
 end
 """
     SIR_wrapper(grid_size::Tuple{Int64, Int64}, area::Unitful.Area{Float64}, params::NamedTuple, runtimes::NamedTuple)
