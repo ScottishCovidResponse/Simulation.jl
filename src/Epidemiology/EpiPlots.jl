@@ -48,7 +48,7 @@ end
 @recipe function f(
     h::Plot_EpiHeatmaps;
     compartment="Exposed",
-    steps=[],
+    steps=[], layout = [],
 )
     _check_args(h)
     epi, abuns = h.args
@@ -57,7 +57,9 @@ end
         steps = _default_steps(abuns)
     end
 
-    layout := length(steps)
+    if isempty(layout)
+        layout := length(steps)
+    end
     # Transpose by default
     # `match_dimensions` is the same as `transpose`
     match_dimensions --> true

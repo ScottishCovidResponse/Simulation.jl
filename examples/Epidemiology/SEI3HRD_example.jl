@@ -136,14 +136,24 @@ function run_model(times::Unitful.Time, interval::Unitful.Time, timestep::Unitfu
         # View summed SIR dynamics for whole area
         display(plot_epidynamics(epi, abuns))
     end
+
+    return abuns, epi
 end
 
-times = 1month; interval = 10day; timestep = 1day
-abuns_run1 = run_model(times, interval, timestep);
-abuns_run2 = run_model(times, interval, timestep);
+times = 1month; interval = 1day; timestep = 1day
+abuns_run1, epi = run_model(times, interval, timestep);
+abuns_run2, epi = run_model(times, interval, timestep);
 
 if stochasticmode
     abuns_run1 == abuns_run2 && @warn "Stochastic realisations are identical..."
 else
     abuns_run1 == abuns_run2 || @error "Deterministic runs are different..."
 end
+
+## Plot gif
+steps = 1:31
+anim = @animate for s in steps
+    plot_epiheatmaps(epi, abuns_run1, steps = [s], layout = (2, 1), subplot = 1, size = (1000, 1500), xtick = false, ytick = false, tickfontsize = 24, titlefontsize = 24, guidefontsize = 24, clim = (0, 1000))
+    plot_epidynamics!(epi, abuns_run1[:, :, 1:s], subplot = 2, background_color = :white, tickfontsize = 24, titlefontsize = 24, legendfontsize = 12, legend = :topright, xlim = (1,31))
+end
+Plots.gif(anim, "/Users/claireh/Documents/COVID/test.pdf", fps = 5)
