@@ -20,6 +20,10 @@ include("ClimatePref/ClimatePref.jl")
 
 end
 
+using TimerOutputs
+const MAX_THREADS = 100
+const TIMINGS = [TimerOutput() for _ in 1:MAX_THREADS]
+
 """
     enum: DiseaseState
 

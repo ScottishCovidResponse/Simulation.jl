@@ -4,6 +4,7 @@ using Unitful.DefaultSymbols
 using Simulation.Units
 using Simulation.ClimatePref
 using StatsBase
+using TimerOutputs
 using Plots
 using DataFrames
 using Random
@@ -13,6 +14,16 @@ const stochasticmode = true
 const seed = hash(time()) # seed used for Random.jl and therefore rngs used in Simulation.jl
 
 Random.seed!(seed)
+
+TimerOutputs.enable_debug_timings(Simulation)
+if Threads.nthreads() > Simulation.MAX_THREADS
+    @error "Too many threads for TimerOutputs default thread maximum " *
+        "($(Threads.nthreads()) > $(Simulation.MAX_THREADS))"
+end
+
+for i in 1:Threads.nthreads()
+    reset_timer!(Simulation.TIMINGS[i]);
+end
 
 function run_model(times::Unitful.Time, interval::Unitful.Time, timestep::Unitful.Time, do_plot::Bool = false)
 
@@ -136,6 +147,7 @@ function run_model(times::Unitful.Time, interval::Unitful.Time, timestep::Unitfu
         # View summed SIR dynamics for whole area
         display(plot_epidynamics(epi, abuns))
     end
+    return abuns
 end
 
 times = 1month; interval = 10day; timestep = 1day
@@ -147,3 +159,10 @@ if stochasticmode
 else
     abuns_run1 == abuns_run2 || @error "Deterministic runs are different..."
 end
+
+Simulation.TIMINGS[1]
+if Threads.nthreads() > 1
+    Simulation.TIMINGS[2]
+end
+
+TimerOutputs.flatten(Simulation.TIMINGS[1])

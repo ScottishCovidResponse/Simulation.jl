@@ -11,6 +11,17 @@ using HTTP
 using Random
 using DataFrames
 using Plots
+using TimerOutputs
+
+TimerOutputs.enable_debug_timings(Simulation)
+if Threads.nthreads() > Simulation.MAX_THREADS
+    @error "Too many threads for TimerOutputs default thread maximum " *
+        "($(Threads.nthreads()) > $(Simulation.MAX_THREADS))"
+end
+
+for i in 1:Threads.nthreads()
+    reset_timer!(Simulation.TIMINGS[i]);
+end
 
 function run_model(api::DataPipelineAPI, times::Unitful.Time, interval::Unitful.Time, timestep::Unitful.Time; do_plot::Bool = false, do_download::Bool = true, save::Bool = false, savepath::String = pwd())
     # Download and read in population sizes for Scotland
@@ -229,3 +240,10 @@ times = 2months; interval = 1day; timestep = 1day
 abuns = StandardAPI(config, "test_uri", "test_git_sha") do api
     run_model(api, times, interval, timestep)
 end;
+
+Simulation.TIMINGS[1]
+if Threads.nthreads() > 1
+    Simulation.TIMINGS[2]
+end
+
+TimerOutputs.flatten(Simulation.TIMINGS[1])

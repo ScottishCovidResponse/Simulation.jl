@@ -47,6 +47,7 @@ SimulationData = "3d44aec0-db1b-416b-9784-2428c815ea7f"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
@@ -61,6 +62,7 @@ Phylo = "^0.4.2"
 julia = "1.1"
 
 [extras]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195"
@@ -69,4 +71,4 @@ RCall = "6f49c342-dc21-5d91-9882-a32aef131414"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "HTTP", "MPI"]
+test = ["Test", "HTTP", "MPI", "Aqua"]
