@@ -27,17 +27,8 @@ deps/src/
 docs/build/
 docs/site/
 
-# Files generated when running data pipeline or saving output
-access*
-**/*.jld
-**/*.jlso
-**/*.pdf
-**/*.csv
-**/*.txt
-**/*.h5
-examples/**/*.toml
-out/**/*.toml
-**/*.db
+# Don't store personal tokens
+**/token.txt
 
 # General #
 ###########

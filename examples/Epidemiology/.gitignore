@@ -1,0 +1,12 @@
+# Files generated when running data pipeline or saving output
+access*
+*.jlso
+*.jld
+*.csv
+*.h5
+*.toml
+*.txt
+*.db
+*.pdf
+out/
+data/
