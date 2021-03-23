@@ -8,7 +8,7 @@ SELECT age_groups
 , CAST(substr(grid_area, 1, instr(grid_area, '-') - 1) AS INT) AS grid_x
 , CAST(substr(grid_area, instr(grid_area, '-') + 1) AS INT) AS grid_y
 , val
-FROM human_demographics_population_scotland_grid1km_age_persons_arr;
+FROM km_age_persons_arr;
 
 CREATE VIEW pollution_grid_view AS
 SELECT pollutant
