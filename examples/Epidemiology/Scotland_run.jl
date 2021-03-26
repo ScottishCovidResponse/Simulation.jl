@@ -15,9 +15,9 @@ using SQLite
 
 function run_model(db::SQLite.DB, times::Unitful.Time, interval::Unitful.Time, timestep::Unitful.Time; do_plot::Bool = false, do_download::Bool = true, save::Bool = false, savepath::String = pwd())
     # load array (so we can use in sql view, giving it the alias "km_age_persons_arr" for convenience)
-    DataRegistryUtils.load_array!(db, "human/demographics/population/scotland", "/grid1km/age/persons"; sql_alias="km_age_persons_arr")
+    DataRegistryUtils.load_array!(db, "human/demographics/population/scotland", "/grid area/age/persons"; sql_alias="km_age_persons_arr")
     # Download and read in population sizes for Scotland
-    scotpop = get_3d_km_grid_axis_array(db, ["grid_x", "grid_y", "age_aggr"], "val", "scottish_population_view")
+    scotpop = get_3d_km_grid_axis_array(db, ["grid_area", "age_aggr"], "val", "scottish_population_view")
 
     # Read number of age categories
     age_categories = size(scotpop, 3)
@@ -238,7 +238,7 @@ end
 data_dir= "data/"
 config = "data_config.yaml"
 view_sql = "Scotland_run_view.sql"
-db = initialise_local_registry(data_dir, data_config = config, sql_file = view_sql)
+db = initialise_local_registry(data_dir, data_config = config, sql_file = view_sql, verbose = true)
 
 times = 2months; interval = 1day; timestep = 1day
-run_model(db, times, interval, timestep, do_plot = true)
+run_model(db, times, interval, timestep, save = true)
