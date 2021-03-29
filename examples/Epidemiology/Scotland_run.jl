@@ -192,9 +192,13 @@ function run_model(db::SQLite.DB, times::Unitful.Time, interval::Unitful.Time, t
     epilist = EpiList(traits, abun_v, abun_h, movement, transitions, param, age_categories, movement_balance)
     rel = Gauss{eltype(epienv.habitat)}()
 
+    pop_axes = collect(Iterators.product(ustrip.(axisvalues(total_pop)[2]),
+                ustrip.(axisvalues(total_pop)[1])))
+    bng_coords = get_bng.(pop_axes[1:end], 4)
+
     initial_infecteds = 100
     # Create epi system with all information
-    @time epi = EpiSystem(epilist, epienv, rel, total_pop, UInt32(1), initial_infected = initial_infecteds)
+    @time epi = EpiSystem(epilist, epienv, rel, total_pop, UInt32(1), initial_infected = initial_infecteds, grid_refs = bng_coords)
 
     # Populate susceptibles according to actual population spread
     cat_idx = reshape(1:(numclasses * age_categories), age_categories, numclasses)

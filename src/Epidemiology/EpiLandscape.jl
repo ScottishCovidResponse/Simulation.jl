@@ -8,17 +8,18 @@ mutable struct EpiLandscape{U <: Integer, VecRNGType <: AbstractVector{<:Random.
   matrix::Matrix{U}
   matrix_v::Matrix{U}
   grid::Array{U, 3}
+  grid_refs::Vector{String}
   rngs::VecRNGType
 end
-function EpiLandscape(human_abun::Matrix{U}, virus_abun::Matrix{U}, d1::Tuple,
+function EpiLandscape(human_abun::Matrix{U}, virus_abun::Matrix{U}, d1::Tuple, grid_refs::Vector{String},
      Rngtype::Type{R} = Random.MersenneTwister
      ) where {U <: Integer, R <: Random.AbstractRNG}
   rngs = [Rngtype(rand(UInt)) for _ in 1:Threads.nthreads()]
-  return EpiLandscape(human_abun, virus_abun, reshape(human_abun, d1), rngs)
+  return EpiLandscape(human_abun, virus_abun, reshape(human_abun, d1), grid_refs, rngs)
 end
 function EpiLandscape(human_abun::Matrix{U}, virus_abun::Matrix{U}, d1::Tuple,
-    d2::Tuple, rngs::VecRNGType) where {U <: Integer, VecRNGType <: AbstractVector{<:Random.AbstractRNG}}
-  return EpiLandscape(human_abun, virus_abun, reshape(human_abun, d1), rngs)
+    d2::Tuple, grid_refs::Vector{String}, rngs::VecRNGType) where {U <: Integer, VecRNGType <: AbstractVector{<:Random.AbstractRNG}}
+  return EpiLandscape(human_abun, virus_abun, reshape(human_abun, d1), grid_refs, rngs)
 end
 
 virus(x::EpiLandscape) = x.matrix_v
@@ -39,11 +40,11 @@ end
 Function to create an empty EpiLandscape given a GridEpiEnv and a
 EpiList.
 """
-function emptyepilandscape(epienv::GridEpiEnv, epilist::EpiList, intnum::U,
+function emptyepilandscape(epienv::GridEpiEnv, epilist::EpiList, intnum::U, grid_refs::Vector{String},
     Rngtype::Type{R} = Random.MersenneTwister
     ) where {U <: Integer, R <: Random.AbstractRNG}
   mat_human = zeros(U, counttypes(epilist.human, true), countsubcommunities(epienv))
   mat_virus = zeros(U, counttypes(epilist.virus, true), countsubcommunities(epienv))
   dimension = (counttypes(epilist.human, true), _getdimension(epienv.habitat)...)
-  return EpiLandscape(mat_human, mat_virus, dimension, Rngtype)
+  return EpiLandscape(mat_human, mat_virus, dimension, grid_refs, Rngtype)
 end
