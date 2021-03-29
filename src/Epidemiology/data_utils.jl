@@ -1,5 +1,6 @@
 using HDF5
 using SQLite
+using BritishNationalGrid
 """
     parse_hdf5(path; grid="10k", component="scotland_2018")
 
@@ -55,12 +56,17 @@ function get_xy(bng_names::Vector{String})
     return xs, ys
 end
 
+function get_bng(east_north::Tuple{Int64, Int64}, ref::Int64)
+    pnt = BNGPoint(east_north[1], east_north[2])
+    return gridref(pnt, ref, true)
+end
+
 function create_BNG_grid(east::Vector{Int64}, north::Vector{Int64}, vals::Array{Float64, 1}, ages::Vector{Int64})
-    easts = collect(minimum(east):1_000:maximum(east))
-    norths = collect(minimum(north):1_000:maximum(north))
+    easts = collect(minimum(east):1_000:maximum(east)) .* m
+    norths = collect(minimum(north):1_000:maximum(north)) .* m
     grid_a = AxisArray(zeros(Float64, length(norths), length(easts),  length(unique(ages))), Axis{:northing}(norths), Axis{:easting}(easts), Axis{:age}(unique(ages)))
     for i in eachindex(east)
-        grid_a[atvalue(north[i]), atvalue(east[i]), atvalue(ages[i])] = vals[i]
+        grid_a[atvalue(north[i] * m), atvalue(east[i] * m), atvalue(ages[i])] = vals[i]
     end
     return grid_a
 end
@@ -81,7 +87,7 @@ function get_3d_km_grid_axis_array(cn::SQLite.DB, dims::Array{String,1}, msr::St
         # av = i < 3 ? [(v)km for v in dim_vals.val] : dim_vals.val   # unit conversion
         push!(dim_ax, AxisArrays.Axis{Symbol(dims[i])}(dim_vals.val))
     end
-    sel_sql = string("SELECT ", sel_sql, " SUM(", msr1, ") AS val\nFROM ", tbl, "\nGROUP BY ", rstrip(sel_sql, ','))
+    sel_sql = string("SELECT ", sel_sql, " SUM(", msr, ") AS val\nFROM ", tbl, "\nGROUP BY ", rstrip(sel_sql, ','))
     stmt = SQLite.Stmt(cn, sel_sql)
     df = SQLite.DBInterface.execute(stmt) |> DataFrames.DataFrame
     grid_area = df[!, :grid_area]

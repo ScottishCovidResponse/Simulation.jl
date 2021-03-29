@@ -198,8 +198,9 @@ function run_model(db::SQLite.DB, times::Unitful.Time, interval::Unitful.Time, t
 
     # Populate susceptibles according to actual population spread
     cat_idx = reshape(1:(numclasses * age_categories), age_categories, numclasses)
+    x = total_pop.axes[1].val; y = total_pop.axes[2].val
     reshaped_pop =
-        reshape(scotpop[1:size(epienv.active, 1), 1:size(epienv.active, 2), :],
+        reshape(scotpop[minimum(x)..maximum(x), minimum(y)..maximum(y), :],
                 size(epienv.active, 1) * size(epienv.active, 2), size(scotpop, 3))'
     epi.abundances.matrix[cat_idx[:, 1], :] = reshaped_pop
     N_cells = size(epi.abundances.matrix, 2)
@@ -238,7 +239,7 @@ end
 data_dir= "data/"
 config = "data_config.yaml"
 view_sql = "Scotland_run_view.sql"
-db = initialise_local_registry(data_dir, data_config = config, sql_file = view_sql, verbose = true)
+db = initialise_local_registry(data_dir, data_config = config, sql_file = view_sql)
 
 times = 2months; interval = 1day; timestep = 1day
 run_model(db, times, interval, timestep, save = true)

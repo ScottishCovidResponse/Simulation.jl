@@ -68,6 +68,12 @@ git-tree-sha1 = "aa9ef39b54a168c3df1b2911e7797e4feee50fbe"
 uuid = "0b7ba130-8d10-5ba8-a3d6-c5182647fed9"
 version = "1.14.3+1"
 
+[[BritishNationalGrid]]
+deps = ["Formatting", "Proj4", "Test"]
+git-tree-sha1 = "72b2e5fb84eb64fb19db8158b131d06a1b5e88dd"
+uuid = "07503c7f-9676-5157-a8e2-6c0d0a9caee7"
+version = "0.3.1"
+
 [[CEnum]]
 git-tree-sha1 = "215a9aa4a1f23fbd05b92769fdd62559488d70e9"
 uuid = "fa961155-64e5-5f13-b03f-caf6b980ea82"
@@ -743,6 +749,12 @@ uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 deps = ["Printf"]
 uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
 
+[[Proj4]]
+deps = ["CEnum", "PROJ_jll"]
+git-tree-sha1 = "d57db599bf276681e43820f30124e5e8fdf47971"
+uuid = "9a7e659c-8ee8-5706-894e-f68f43bc57ea"
+version = "0.7.3"
+
 [[QuadGK]]
 deps = ["DataStructures", "LinearAlgebra"]
 git-tree-sha1 = "12fbe86da16df6679be7521dfb39fbc861e1dc7b"
@@ -803,10 +815,10 @@ uuid = "79098fc4-a85e-5d69-aa6a-4863f24498fa"
 version = "0.6.1"
 
 [[Rmath_jll]]
-deps = ["Libdl", "Pkg"]
-git-tree-sha1 = "d76185aa1f421306dec73c057aa384bad74188f0"
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "1b7bf41258f6c5c9c31df8c1ba34c1fc88674957"
 uuid = "f50d1b31-88e8-58de-be2c-1cc44531875f"
-version = "0.2.2+1"
+version = "0.2.2+2"
 
 [[SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
